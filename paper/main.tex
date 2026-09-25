@@ -63,10 +63,9 @@ $2^{85}$ decapsulations, far below the claimed 128-bit level; when the
 decapsulation oracle is capped at $2^{64}$ queries, an offline
 precomputation of $2^{22}$--$2^{26}$ encapsulations suffices for DTRU-648,
 -768 and -Prime. DTRU-Light, defined over $x^n+1$, has no such pairing and
-its DFR stays at the claimed order. We also report a lighter screening of
-four further NGCC lattice KEMs (Scabbard, Rudraksh2, ZEN, NEV). No attack we
-describe is practical; the results invalidate the stated security levels in
-the DFR metric and the methodology used to compute them.
+its DFR stays at the claimed order. No attack we describe is practical; the
+results invalidate the stated security levels of DTRU in the DFR metric and
+the methodology used to compute them.
 \end{abstract}
 
 \section{Introduction}
@@ -149,9 +148,6 @@ form in the secret with about $900$ effective coordinates out of $4096$
 $0.19$--$0.27$, so a second failure costs about $2^{-72}$--$2^{-86}$ once
 the first is known, consistent with~\cite{DRV20}. Full key recovery is not
 executed.
-\item \textbf{Screening of other NGCC KEMs.} A lighter analysis of
-Scabbard, Rudraksh2, ZEN and NEV finds only Rudraksh2-128-I close to its
-level ($2^{97}$--$2^{123}$ under a $2^{80}$ query cap).
 \end{enumerate}
 
 Every number in this paper is reproducible from a few hundred lines of
@@ -602,56 +598,6 @@ secret (random directions: $0.07$), with only $z\approx3.5$ per failure.
 At the real parameters each failure carries $z\approx13$. We did not run
 the final lattice-reduction step and do not claim a completed key recovery.
 
-\section{Screening of other NGCC lattice KEMs}
-\label{sec:others}
-
-The same cost model was applied, more lightly, to the NGCC lattice KEMs
-whose claimed DFR is below the nominal level: Scabbard (MLWR, B2-Minal
-code), Rudraksh2 (MLWE with compression, same code), ZEN and NEV. For
-Scabbard and Rudraksh2 the absolute DFR was anchored to the designers'
-published value and only the ciphertext-to-ciphertext spread was modelled
-(through the squared norm of the encapsulation secret and the fraction $w$
-of the noise variance it controls, with the Chernoff cost of a large norm);
-for ZEN we checked the designers' own failure-boosting arithmetic; for NEV we
-re-sampled the block-norm means and re-evaluated their Chernoff bound at
-$2^{64}$ and $2^{80}$ query caps.
-
-\begin{table}[t]
-\centering\small
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{lrrrl}
-\toprule
-Set & level & claimed $\log_2\dfr$ & classical work at $2^{80}$ queries & note\\
-\midrule
-Rudraksh2-128-I & 128 & $-100$ & $2^{97}$--$2^{123}$ & model vs.\ anchored; quantum $2^{89}$--$2^{101}$\\
-Rudraksh2-128-II & 128 & $-100$ & unreachable & weakest ciphertext $\approx2^{-86}$\\
-Rudraksh2-256-I/II & 256 & $-161/-167$ & unreachable & $\approx2^{-87}$ / $2^{-130}$\\
-Rudraksh2-512-I/II & 512 & $-160/-160$ & $2^{1680}$ / unreachable & \\
-Scabbard-128 & 128 & $-99$ & $2^{240}$ & anchored; $w=0.26$\\
-Scabbard-256/512 & 256/512 & $-125/-125$ & unreachable / $2^{923}$ & $w=0.06$ / $0.49$\\
-ZEN-512 (769$\to$256) & 512 & $-179.6$ & $2^{748}$ & designers' Table~2 verified\\
-NEV-R3 & 512 & $-147$ & $2^{542}$ & matches designers' Table~7\\
-NEV-C2 / R2 & 256 & $-162/-158$ & $2^{324}$ / $2^{369}$ & within a few bits of Table~7\\
-\bottomrule
-\end{tabular}}
-\caption{Screening of other NGCC lattice KEMs. ``unreachable'' means that
-even the maximal encapsulation-secret norm does not push the failure
-probability to the threshold required by the query cap.}
-\label{tab:others}
-\end{table}
-
-Only Rudraksh2-128-I ends near its level: with $2^{80}$ decryptions the
-classical total is $2^{97}$ (our Gaussian model, $\dfr=2^{-92.5}$) to
-$2^{123}$ (anchored to the claimed $2^{-100}$); with $2^{64}$ decryptions
-it rises to $2^{256}$. For the other schemes either the weakest honest
-ciphertext cannot reach the threshold or the offline search already exceeds
-the nominal level. These schemes use one-bit-per-coefficient or
-two-coefficient codes over $x^n+1$ and do not exhibit the block-pairing
-structure of DTRU; the 100-bit gaps between isotropic models and published
-DFRs that we saw for Scabbard-256 and Rudraksh2-256-II are due to
-two-dimensional decoding regions and were resolved by anchoring, not by
-our model.
-
 \section{Discussion}
 \label{sec:discussion}
 
@@ -707,7 +653,7 @@ $16\times16$ covariance matrices and can be added to any DFR script.
 
 \paragraph{Reproducibility.}
 All scripts (\texttt{dfr\_all\_sets.py}, \texttt{ml\_decoder\_check.py},
-\texttt{exact\_cgf\_check.py}, \texttt{recover.py}, \texttt{boost\_screen.py})
+\texttt{exact\_cgf\_check.py}, \texttt{recover.py})
 and their JSON outputs are provided with this paper. They depend only on
 NumPy, SciPy and mpmath.
 
