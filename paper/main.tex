@@ -1,0 +1,755 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xcolor}
+\usepackage{graphicx}
+
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\newcommand{\Err}{\mathrm{Err}}
+\newcommand{\Gram}{\mathrm{Gram}}
+\newcommand{\ID}{\mathrm{ID}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathcal{R}}
+\newcommand{\dfr}{\delta}
+\newcommand{\CBD}{\mathcal{B}}
+
+\title{Correlated Decryption Errors in DTRU:\\
+Revisiting Failure Rates and Failure Boosting\\
+for Lattice KEMs with Repetition-Coded Blocks}
+
+\author{%
+Author names\\
+Affiliation\\
+\texttt{email}}
+
+\date{September 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+DTRU is an NTRU-based key encapsulation mechanism submitted to the Chinese
+NGCC post-quantum competition. Its designers bound the decryption failure
+rate (DFR) of every parameter set by modelling the 16 error coefficients of
+each DoubleE$_8$ decoding block as independent Gaussians and using the
+inscribed ball of the code's Voronoi cell as a sufficient decoding
+condition. We show that both steps fail for the tricyclotomic ring
+$\Z_q[x]/(x^n-x^{n/2}+1)$ and for the LPPNF ring $\Z_q[x]/(x^n-x-1)$ used by
+six of the seven parameter sets. Ring multiplication couples coefficients
+$i$ and $i+n/2$, the repetition code forces $w_i=w_{i+n/2}$, and each
+decoding block consists of exactly eight such pairs, so the block covariance
+has eight large and eight small eigenvalues. Replacing the ball by the exact
+maximum-likelihood failure region of Algorithm~2 and the independence
+assumption by the conditional block covariance, we estimate the true DFR of
+DTRU-648, -768, -1024, -Prime, -1536 and -2048 to lie between $2^{-85}$ and
+$2^{-123}$, against claimed values of $2^{-147}$ to $2^{-204}$. The model is
+validated against the real decoder on scaled-down instances of all three
+rings to within one bit at the median. In the failure-boosting cost model
+of D'Anvers et al., one decryption failure of DTRU-648 costs about
+$2^{85}$ decapsulations, far below the claimed 128-bit level; when the
+decapsulation oracle is capped at $2^{64}$ queries, an offline
+precomputation of $2^{22}$--$2^{26}$ encapsulations suffices for DTRU-648,
+-768 and -Prime. DTRU-Light, defined over $x^n+1$, has no such pairing and
+its DFR stays at the claimed order. We also report a lighter screening of
+four further NGCC lattice KEMs (Scabbard, Rudraksh2, ZEN, NEV). No attack we
+describe is practical; the results invalidate the stated security levels in
+the DFR metric and the methodology used to compute them.
+\end{abstract}
+
+\section{Introduction}
+
+Lattice-based KEMs built from (Ring/Module-)LWE or NTRU decrypt correctly
+only with overwhelming probability. A small decryption failure rate (DFR)
+$\dfr$ is harmless for correctness, but it enters the security of the
+Fujisaki--Okamoto transform through terms of the form $(q_H+q_D)\dfr$, and,
+more concretely, an adversary who can trigger failures learns information
+about the secret key. D'Anvers, Vercauteren and Verbauwhede~\cite{DVV19}
+introduced \emph{failure boosting}: honestly generate many ciphertexts
+offline, keep those whose failure probability is unusually high, and submit
+only those to the decapsulation oracle. D'Anvers, Rossi and
+Virdia~\cite{DRV20} showed that once a first failure is found, subsequent
+failures are much cheaper (\emph{directional failure boosting}), so the
+security target is that even one failure must cost $2^\lambda$. D'Anvers and
+Batsleer~\cite{DB22} refined the cost accounting and applied it to Saber and
+Kyber.
+
+Designers therefore need a reliable DFR estimate. The common practice is to
+compute the distribution of a single error coefficient exactly (by
+convolution) and then to treat the coefficients that enter one decoding
+decision as independent. For schemes over $\Z_q[x]/(x^n+1)$ with one bit per
+coefficient this is well studied~\cite{DVV19,DB22,FWZ22}. Error-correcting
+codes change the picture: a decoding decision now depends on a block of
+coefficients, and any correlation inside the block changes the tail.
+
+\paragraph{DTRU.}
+DTRU~\cite{DTRU} is an NTRU-based KEM submitted to the NGCC competition. Its
+main parameter sets live in the tricyclotomic ring
+$\R_q=\Z_q[x]/(x^n-x^{n/2}+1)$ with $q=3457$, a variant DTRU-Prime uses the
+LPPNF ring $\Z_q[x]/(x^{1087}-x-1)$, and a lightweight set DTRU-Light uses
+$\Z_{769}[x]/(x^{512}+1)$. Messages are encoded with DoubleE$_8$: four bits
+become an $[8,4,4]$ extended Hamming codeword, which is then repeated by
+multiplication with $(1+x^{n/2})$; the decoder works on 16-coefficient
+blocks consisting of the $i$-th octet and the octet at distance $n/2$. The
+specification bounds the DFR by (i) the inscribed ball
+$\|\Err^{(i)}\|_2^2<(q-1)^2/2$ of the code and (ii) modelling
+$\|\Err^{(i)}\|^2$ as $\sigma^2\chi^2(16)$, and reports failure rates from
+$2^{-143.9}$ (Light) to $2^{-204.1}$ (DTRU-2048).
+
+\paragraph{Contributions.}
+\begin{enumerate}
+\item \textbf{The failure event.} We derive the exact failure region of
+Algorithm~2. Because the two symbol values $0$ and $(q+1)/2$ are antipodal
+in $\Z_q$, block $i$ is decoded incorrectly iff for some codeword difference
+with support $D$ ($|D|\in\{8,16\}$)
+$\sum_{j\in D}|\Err_j|\ge |D|(q+1)/4$. This is a union of half-spaces
+tangent to the inscribed ball, so the ball is a strict over-approximation.
+\item \textbf{The correlation.} In $x^n-x^{n/2}+1$ every cross term of a
+ring product pairs indices at distance exactly $n/2$, and the repetition
+code makes $w_i=w_{i+n/2}$. Each decoding block is made of eight such pairs.
+The conditional covariance of a block, given the ciphertext, has eight
+eigenvalues around $0.3\times$ and eight around $1.6$--$2.1\times$ the
+marginal variance. The failing directions are the large ones.
+\item \textbf{A validated estimator.} We compute the Gaussian half-space
+union per block given the ciphertext randomness, correct the dominant terms
+with the exact centred-binomial cumulant generating function
+(Lugannani--Rice), and validate against the real key generation, encryption
+and decoder on scaled-down instances of all three rings: medians agree to
+within $0.3$--$0.8$ bits, second moments to $1$--$3\%$.
+\item \textbf{Corrected DFRs.} For 200 honest ciphertexts per set, the
+median failure probabilities of DTRU-648/768/1024/Prime/1536/2048 are
+$2^{-97},2^{-112},2^{-118},2^{-115},2^{-111},2^{-123}$ and the averages
+$2^{-85},2^{-98},2^{-105},2^{-96},2^{-101},2^{-111}$; the claimed values are
+$2^{-147}$ to $2^{-204}$. Re-running the specification's own method with our
+variances reproduces their numbers to within $\pm 8$ bits, so the gap is
+the model, not the variance. DTRU-Light has no pairing and its DFR is of
+the claimed order.
+\item \textbf{Failure boosting costs.} Classical work for a first failure
+cannot go below $1/\E[\dfr]$; we obtain $2^{85}$--$2^{111}$ for the six
+affected sets against nominal levels $128$--$512$. Separating the offline
+precomputation from oracle queries as in~\cite{DVV19}, DTRU-648 already
+contains honest ciphertexts with failure probability above $2^{-80}$ among
+200 samples, and a $2^{64}$ query cap is met with $2^{22}$--$2^{26}$
+offline encapsulations for DTRU-648, -768 and -Prime.
+\item \textbf{After the first failure.} A failure yields a known linear
+form in the secret with about $900$ effective coordinates out of $4096$
+(DTRU-2048); failure directions of independent ciphertexts have cosine
+$0.19$--$0.27$, so a second failure costs about $2^{-72}$--$2^{-86}$ once
+the first is known, consistent with~\cite{DRV20}. Full key recovery is not
+executed.
+\item \textbf{Screening of other NGCC KEMs.} A lighter analysis of
+Scabbard, Rudraksh2, ZEN and NEV finds only Rudraksh2-128-I close to its
+level ($2^{97}$--$2^{123}$ under a $2^{80}$ query cap).
+\end{enumerate}
+
+Every number in this paper is reproducible from a few hundred lines of
+Python; scripts and raw outputs accompany the paper.
+
+\section{Preliminaries}
+
+\subsection{Notation}
+For a polynomial $a\in\R=\Z[x]/(\phi(x))$ of degree $n$ we write $a_j$ for
+its coefficients and $M_a\in\Z^{n\times n}$ for the matrix of
+multiplication by $a$, whose $j$-th column is $a\cdot x^j$; then $M_a b=ab$.
+For an index set $I$ of size 16 we write $M_a[I]$ for the $16\times n$
+submatrix of rows $I$. $\CBD_\eta$ is the centred binomial distribution
+with variance $\eta/2$. $Q(z)=\Pr[N(0,1)\ge z]$.
+
+\subsection{DTRU}
+\label{sec:dtru}
+
+Three rings are used:
+\[
+\R^{\mathrm{tri}}=\Z[x]/(x^n-x^{n/2}+1),\quad
+\R^{\mathrm{pow2}}=\Z[x]/(x^n+1),\quad
+\R^{\mathrm{lppnf}}=\Z[x]/(x^n-x-1).
+\]
+Key generation samples $f'\leftarrow\CBD_{k_{f'}}^n$, $g\leftarrow\CBD_{k_g}^n$,
+sets $f=pf'+1$ with $p=2$ (tricyclotomic, LPPNF) or $p=1-x^{n/2}$
+(power-of-two), and publishes $h=g/f\bmod q$. Encryption samples
+$r\leftarrow\CBD_{k_r}^n$, $e\leftarrow\CBD_{k_e}^n$, encodes the message to
+$w\in\{0,1\}^n$ and outputs
+$c=\lfloor \tfrac{q_2}{q}(hr+e+\tfrac{q+1}{2}w)\rceil\bmod q_2$. Decryption
+decompresses $c'=\lfloor\tfrac{q}{q_2}c\rceil$, computes $c'f$ and decodes.
+Writing $\varepsilon$ for the compression noise and $u=e+\varepsilon$, the
+specification's Theorem~1 gives
+\begin{equation}
+\label{eq:err}
+c'f=\Err+\tfrac{q+1}{2}w,\qquad
+\Err=\begin{cases}
+gr+f'(2u+w)+u, & p=2,\\[2pt]
+gr+f'\bigl((1-x^{n/2})u+w'\bigr)+u, & p=1-x^{n/2}.
+\end{cases}
+\end{equation}
+
+\paragraph{DoubleE$_8$.}
+Each 4-bit chunk $m_i$ is mapped to $u_i=m_iH\bmod 2\in\{0,1\}^8$ with $H$
+the generator of the $[8,4,4]$ extended Hamming code, placed at coefficients
+$8i,\dots,8i+7$ of $w'$, and $w=(1+x^{\mathrm{off}})w'$ with
+$\mathrm{off}=n/2$. Hence $w_j=w_{j+n/2}=w'_j$. Algorithm~2 decodes block
+$i$ from the 16 coefficients $t_{8i},\dots,t_{8i+7},t_{8i+n/2},\dots,t_{8i+7+n/2}$
+by computing, for each of the 16 codewords $\tfrac{q+1}{2}(u,u)$, the sum
+of squared centred distances $\|\cdot\|_{q,2}^2$ and returning the argmin.
+For $n=1087$ (DTRU-Prime) the specification does not state the layout; we
+use $\lfloor n/16\rfloor=67$ blocks and $\mathrm{off}=\lfloor n/2\rfloor=543$.
+
+\paragraph{Parameters.}
+Table~\ref{tab:params} lists the seven sets (specification Table~1 and~2).
+The KEM is $\mathrm{FO}^{\not\perp}_{\ID(pk),m}$ with implicit rejection and
+$(K,\rho)=H(\ID(pk),m)$; the encryption randomness is derived from $\rho$.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lllrrrllrr}
+\toprule
+Set & ring & $p$ & $n$ & $q$ & $q_2$ & $(k_g,k_{f'})$ & $(k_r,k_e)$ & claimed $\log_2\dfr$ & level\\
+\midrule
+Light & pow2 & $1-x^{n/2}$ & 512 & 769 & $2^8$ & $(2,1)$ & $(1,2)$ & $-143.92$ & 128\\
+648 & tri & 2 & 648 & 3457 & $2^9$ & $(9,2)$ & $(2,2)$ & $-146.79$ & 128\\
+768 & tri & 2 & 768 & 3457 & $2^{10}$ & $(4,3)$ & $(4,2)$ & $-185.56$ & 192\\
+1024 & tri & 2 & 1024 & 3457 & $2^{10}$ & $(5,2)$ & $(3,2)$ & $-190.48$ & 256\\
+Prime & lppnf & 2 & 1087 & 2017 & $2^{10}$ & $(2,1)$ & $(2,1)$ & $-180.72$ & 256\\
+1536 & tri & 2 & 1536 & 3457 & $2^{10}$ & $(3,2)$ & $(2,1)$ & $-195.50$ & 384\\
+2048 & tri & 2 & 2048 & 3457 & $2^{10}$ & $(5,1)$ & $(2,1)$ & $-204.10$ & 512\\
+\bottomrule
+\end{tabular}
+\caption{DTRU parameter sets. DTRU-648 targets 128-bit quantum security
+(its NTRU Core-SVP claim is 164/144).}
+\label{tab:params}
+\end{table}
+
+\subsection{The specification's DFR bound}
+\label{sec:specdfr}
+Section~2.3 of~\cite{DTRU} argues that block $i$ decodes correctly whenever
+\begin{equation}
+\label{eq:ball}
+\|\Err^{(i)}\|_2^2=\|\Err_i\|_{q,2}^2+\|\Err_{i+n/16}\|_{q,2}^2<\frac{(q-1)^2}{2}=:T,
+\end{equation}
+because the scaled code has minimum Euclidean distance $\sqrt2(q-1)$. It
+then assumes the 16 coefficients independent, so that
+$\|\Err^{(i)}\|^2\sim\sigma^2\chi^2(16)$, and applies a union bound over
+$n/16$ blocks:
+$\dfr\le\frac{n}{16}\Pr[\chi^2(16)\ge T/\sigma^2]$. Section~2.4 adds that
+adversarial choice of the message can raise the failure rate by at most
+about $2^{20}$.
+
+\subsection{Failure boosting}
+\label{sec:fb}
+Following~\cite{DVV19,DB22}, let $p(c)$ be the failure probability of an
+honestly generated ciphertext $c$ over the secret key, and let
+$\dfr=\E_c[p(c)]$. The adversary fixes a threshold $f_t$, generates
+ciphertexts offline (this is legal: the randomness is $H(\ID(pk),m)$ for
+a chosen $m$), and keeps those with $p(c)>f_t$. With
+$\alpha=\Pr_c[p(c)>f_t]$ and $\beta=\E[p(c)\mid p(c)>f_t]$, the expected
+cost of one failure is $\alpha^{-1}$ encapsulations offline and
+$\beta^{-1}$ decapsulation queries, i.e.\ total classical work
+$(\alpha\beta)^{-1}$; Grover search reduces the offline part to
+$\alpha^{-1/2}$. Since
+\begin{equation}
+\label{eq:identity}
+\alpha\beta=\E\bigl[p(c)\,\mathbf 1_{p(c)>f_t}\bigr]\le\E[p(c)]=\dfr,
+\end{equation}
+classical total work never drops below $1/\dfr$; boosting trades oracle
+queries for offline work. When the oracle is capped at $2^{64}$ queries
+(the NIST model), $f_t$ is chosen so that $\beta^{-1}=2^{64}$. Because
+$\ID(pk)$ enters the hash, weak ciphertexts do not transfer between keys
+and the multi-target improvements of~\cite{DB22} do not apply.
+
+\section{The failure region of Algorithm~2}
+\label{sec:region}
+
+\begin{lemma}
+\label{lem:region}
+Let $u\in\{0,1\}^8$ be the sent codeword and let all coefficients of
+$\Err^{(i)}$ be represented in $(-q/2,q/2)$. Algorithm~2 returns a codeword
+$u'\ne u$ only if, with $D=\mathrm{supp}(u'-u)\cup(\mathrm{supp}(u'-u)+8)$,
+\begin{equation}
+\label{eq:halfspace}
+\sum_{j\in D}|\Err^{(i)}_j|\ \ge\ |D|\cdot\frac{q+1}{4},
+\end{equation}
+and conversely it fails whenever~\eqref{eq:halfspace} holds for some
+codeword $u'\ne u$ (up to rounding of $\pm1$ in the threshold).
+\end{lemma}
+
+\begin{proof}
+Let $h=(q+1)/2$. On a coordinate where $u_j\ne u'_j$, the received value is
+$hu_j+e_j$ and the two candidate symbols are $hu_j$ and $hu_j+h\equiv
+hu_j-(q-1)/2$. The centred distance to the wrong symbol is $h-|e_j|$ (up to
+one unit) regardless of the sign of $e_j$, because $0$ and $h$ are
+antipodal in $\Z_q$. The cost difference of $u'$ against $u$ is therefore
+$\sum_{j\in D}\bigl((h-|e_j|)^2-e_j^2\bigr)=\sum_{j\in D}\bigl(h^2-2h|e_j|\bigr)$,
+which is negative iff $\sum_{j\in D}|e_j|>|D|h/2$. The codeword pair is
+repeated on both octets, so $D$ contains a position and its partner at
+distance 8 inside the block.
+\end{proof}
+
+The $[8,4,4]$ code has 14 codewords of weight 4 and one of weight 8, so a
+block has 14 half-space families with $|D|=8$ (threshold $2(q+1)$) and one
+with $|D|=16$. Writing~\eqref{eq:halfspace} as
+$\max_{s\in\{\pm1\}^D}\langle s,\Err^{(i)}\rangle\ge|D|(q+1)/4$, the failure
+region is the union over $14\cdot 2^8+2^{16}$ half-spaces, each at
+Euclidean distance $(q+1)/\sqrt2$ from the origin. The ball~\eqref{eq:ball}
+has radius $(q-1)/\sqrt2$: it is the inscribed ball of the Voronoi cell and
+a strict subset of the correct-decoding region. We verified
+Lemma~\ref{lem:region} against the reference decoder on $8000$ random error
+vectors at $q\in\{193,3457\}$: the predicate never fired on a correctly
+decoded block and missed only a handful of failures at the modular seam.
+
+A \emph{fixed-sign} variant that only keeps $s=u'-u$ misses almost all
+failures (2--4 of several hundred in our tests): because of the antipodal
+symbols, both signs contribute. This matters below, since the fixed-sign
+direction is the low-variance direction of the block.
+
+\section{Block covariance in the tricyclotomic ring}
+\label{sec:cov}
+
+Fix the ciphertext randomness $(r,u,w)$ and set $v=2u+w$ (tricyclotomic and
+LPPNF) or $v=(1-x^{n/2})u+w'$ (power-of-two). By~\eqref{eq:err},
+$\Err=M_r g+M_v f'+u$ is linear in the secret $(g,f')$, whose coefficients
+are i.i.d.\ centred binomial with variances $\sigma_g^2=k_g/2$ and
+$\sigma_{f'}^2=k_{f'}/2$. For a block with index set $I$,
+\begin{equation}
+\label{eq:sigma}
+\Sigma_I=\sigma_g^2\,M_r[I]M_r[I]^\top+\sigma_{f'}^2\,M_v[I]M_v[I]^\top
+=\sigma_g^2\Gram_I(r)+\sigma_{f'}^2\Gram_I(v).
+\end{equation}
+The specification's model corresponds to replacing $\Sigma_I$ by its
+diagonal (in fact by a single scalar).
+
+\begin{lemma}
+\label{lem:pair}
+In $\Z[x]/(x^n-x^{n/2}+1)$, for every $a\in\R$ and every output index $k$,
+each coefficient $a_j$ appears in $(a\cdot x^t)_k$ for exactly one $t$
+except for pairs $(j,j')$ with $|j-j'|=n/2$, which appear together with
+equal sign. Consequently $\Gram(a)_{k,k+n/2}\ne 0$ in general, while for
+$|k-k'|\notin\{0,n/2\}$ the entry $\Gram(a)_{k,k'}$ has mean zero over
+random $a$.
+\end{lemma}
+
+The proof is a direct computation with $x^n=x^{n/2}-1$; in the power-of-two
+ring $x^n=-1$ produces no such pairing, and in the LPPNF ring $x^n=x+1$
+produces an analogous but weaker coupling. The consequence for DTRU is that
+a decoding block consists of exactly the eight ring-paired index pairs
+$(8i+j,\,8i+j+n/2)$, $j=0,\dots,7$, and the encoding repetition
+$w_j=w_{j+n/2}$ adds a second correlated component through
+$\Gram(v)$.
+
+\paragraph{Numerical picture (DTRU-2048).}
+Sampling the secret 3000 times for one honest ciphertext, coefficients $0$
+and $n/2$ of $\Err$ have variances $1.09\cdot10^4$ and $1.13\cdot10^4$ and
+covariance $-7.3\cdot10^3$ (correlation $-0.66$). The expected block
+covariance of block~0 has eigenvalues
+\begin{align*}
+&\{5709,\,5723,\,5781,\,5788,\,5797,\,5843,\,5851,\,6767\}\ \cup\\
+&\{28964,\,28993,\,29110,\,29394,\,29537,\,29557,\,29580,\,38418\},
+\end{align*}
+against a marginal variance of about $1.84\cdot10^4$. The trace is
+preserved: correlation redistributes variance, it does not create it.
+Since the failure region is a union of half-spaces, the tail is governed by
+$\max_s s^\top\Sigma_I s$, i.e.\ by the large eigenvalues, and the
+sign-alternating patterns $s$ with $s_j=-s_{j+8}$ are exactly the ones
+aligned with them. Across the parameter sets the ratio between the largest
+eigenvalue and the mean diagonal is $2.1$--$2.5$ (tricyclotomic), $3.4$
+(LPPNF) and $1.27$ (power-of-two, DTRU-Light), see Table~\ref{tab:dfr}.
+
+\section{Estimating the failure probability}
+\label{sec:model}
+
+\paragraph{Per-ciphertext probability.}
+Given $(r,u,v)$, for each block $I$ and each pattern $(D,s)$ we compute
+$\sigma_{s}^2=s^\top\Sigma_I s$ and the Gaussian tail
+$Q\bigl((|D|(q+1)/4\mp\langle s,u_I\rangle)/\sigma_s\bigr)$ for both signs
+of $s$ (the known term $u$ shifts the mean); the block probability is the
+union bound over patterns, and $p(c)$ the union over blocks. At the
+operating points of DTRU the dominant pattern has standard score
+$z\approx 12$--$13$, the half-spaces barely overlap, and the union bound is
+tight; on the toy parameters below (with $z\approx3$--$4$) it overestimates
+the mean by $1$--$2$ bits, which we report.
+
+\paragraph{Exact secret distribution.}
+The Gaussian approximation of $\langle s,\Err\rangle=a_g^\top g+a_f^\top f'$
+at $12\sigma$ deserves a check. The exact cumulant generating function is
+$K(t)=\sum_j 2k_g\log\cosh(t a_{g,j}/2)+\sum_j 2k_{f'}\log\cosh(t a_{f,j}/2)$,
+and the Lugannani--Rice saddlepoint formula gives the tail. Applied to the
+64 most probable $(I,D,s)$ terms of each ciphertext, it lowers $\log_2 p$ by
+$0.4$--$1.3$ bits; all headline numbers include this correction.
+
+\paragraph{Averaging over ciphertexts.}
+For each set we draw 200 honest ciphertexts and report the median of
+$\log_2 p(c)$, the sample mean $\overline{p}$ of $p(c)$ (with a bootstrap
+interval), and the normal-tail extrapolation
+$\log_2\E[p]=\mu+\sigma^2\ln2/2$ from the sample mean $\mu$ and standard
+deviation $\sigma$ of $\log_2 p$. The sample mean is dominated by the few
+weakest ciphertexts; the extrapolation places the mass of $\E[p]$ at
+$\mu+\sigma^2\ln 2$, i.e.\ $4$--$7\sigma$ above the mean, beyond the sample.
+Within the sample, $\log_2 p$ is close to normal (skewness $-0.23$ to
+$+0.04$, excess kurtosis about $0$). Since $\log_2 p$ is a concave function
+of the top eigenvalue, a Gaussian-tailed eigenvalue would make the true
+right tail lighter than normal, so the truth is expected between the two
+estimates.
+
+\subsection{Validation on scaled-down instances}
+\label{sec:toy}
+
+For each ring we ran the complete scheme (key generation with polynomial
+inversion, compression, decompression, Algorithm~2) on 40 fresh keys with
+500 encryptions each, keeping the CBD widths of a real parameter set and
+lowering $(n,q)$ until failures become observable. Table~\ref{tab:toy}
+compares the observed failure rate with the ball condition~\eqref{eq:ball}
+and with the model of this section evaluated on the same ciphertexts.
+The algebraic error~\eqref{eq:err} matched the integer computation of $c'f$
+coefficient by coefficient in all $60000$ encryptions.
+
+\begin{table}[t]
+\centering\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrr}
+\toprule
+Ring & toy parameters & Alg.~2 fails & ball & model median & model mean & $\E[\Err^2]$ ratio\\
+\midrule
+$x^n-x^{n/2}+1$ & $n{=}64,q{=}193,q_2{=}64$, $\CBD_{5,1,2,1}$ & $2^{-9.7}$ (24) & $2^{-4.7}$ & $2^{-10.0}$ & $2^{-8.1}$ & 1.03\\
+$x^n+1$, $p{=}1{-}x^{32}$ & $n{=}64,q{=}89,q_2{=}32$, $\CBD_{2,1,1,2}$ & $2^{-8.1}$ (71) & $2^{-2.2}$ & $2^{-8.4}$ & $2^{-6.9}$ & 1.02\\
+$x^n-x-1$ & $n{=}61,q{=}149,q_2{=}64$, $\CBD_{2,1,2,1}$ & $2^{-8.4}$ (58) & $2^{-3.8}$ & $2^{-9.2}$ & $2^{-6.6}$ & 1.01\\
+\bottomrule
+\end{tabular}}
+\caption{Real decoder versus models on scaled-down instances ($20000$
+encryptions each). ``ball'' is the rate of $\|\Err^{(i)}\|^2\ge T$; the
+last column is the empirical second moment of the error coefficients over
+the model's $\mathrm{tr}\,\Sigma_I/16$.}
+\label{tab:toy}
+\end{table}
+
+The ball condition fires $4$--$6$ bits more often than the decoder fails.
+The per-ciphertext model matches the decoder to $0.3$--$0.8$ bits at the
+median; its mean is inflated by the union bound at these moderate standard
+scores. Per-key failure counts ranged from $0$ to $21$, so the failure rate
+of a fixed key deviates from the average by a few bits.
+
+\section{Corrected failure rates}
+\label{sec:results}
+
+Table~\ref{tab:dfr} gives, for each set: the claimed DFR; the
+specification's method (independent $\chi^2(16)$ on the ball) re-run with
+our marginal variance; the ball event with the correct spectrum; and the
+true decoding failure with the correct spectrum (median, sample mean with a
+$95\%$ bootstrap interval, normal-tail extrapolation).
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+& & indep.\ $\chi^2$ & $\sigma^2$ ours/ & spectrum & \multicolumn{3}{c}{true decoding failure} & $\lambda_{\max}/$\\
+Set & claimed & + ball & implied & + ball, mean & median & mean [95\%] & normal tail & diag\\
+\midrule
+Light & $-143.9$ & $-139.2$ & 1177/1145 & $-101.4$ & $\mathbf{-153.6}$ & $\mathbf{-137.4}$ [$-139.9,-136.2$] & $-121.7$ & 1.27\\
+648 & $-146.8$ & $-153.3$ & 21978/22777 & $-70.4$ & $\mathbf{-96.8}$ & $\mathbf{-85.4}$ [$-89.9,-84.1$] & $-83.6$ & 2.13\\
+768 & $-185.6$ & $-189.7$ & 18377/18719 & $-74.9$ & $\mathbf{-111.6}$ & $\mathbf{-97.9}$ [$-100.5,-96.6$] & $-86.0$ & 2.31\\
+1024 & $-190.5$ & $-196.7$ & 17783/18276 & $-83.9$ & $\mathbf{-117.6}$ & $\mathbf{-104.6}$ [$-108.2,-103.4$] & $-98.1$ & 2.25\\
+Prime & $-180.7$ & $-224.7$ & 5402/6498 & $-64.4$ & $\mathbf{-115.2}$ & $\mathbf{-96.3}$ [$-102.0,-94.7$] & $-79.8$ & 3.43\\
+1536 & $-195.5$ & $-195.6$ & 17826/17834 & $-77.3$ & $\mathbf{-110.7}$ & $\mathbf{-100.7}$ [$-102.9,-99.4$] & $-93.9$ & 2.50\\
+2048 & $-204.1$ & $-209.6$ & 16781/17166 & $-88.6$ & $\mathbf{-123.2}$ & $\mathbf{-110.8}$ [$-115.2,-109.3$] & $-109.1$ & 2.32\\
+\bottomrule
+\end{tabular}}
+\caption{$\log_2$ of failure probabilities, 200 honest ciphertexts per
+set. ``implied'' is the per-coefficient variance that reproduces the claimed
+DFR under the specification's model.}
+\label{tab:dfr}
+\end{table}
+
+Three observations.
+
+\begin{enumerate}
+\item The third column reproduces the specification's figures to within
+$\pm8$ bits for all sets except DTRU-Prime, where the specification's
+implied variance is $20\%$ larger than ours (its independent model would
+give $2^{-225}$ rather than the claimed $2^{-181}$). The discrepancy
+between claimed and true DFR is therefore a modelling error, not a
+variance error.
+\item For the six sets over the tricyclotomic and LPPNF rings the true
+failure probability is $50$--$110$ bits larger than claimed. The
+independence assumption alone accounts for about 100 bits (the true
+decoding event under $\Sigma_I=\lambda I$ would be $2^{-221}$ for DTRU-2048);
+the ball over-approximation goes the other way by $18$--$50$ bits. The
+specification's $2^{20}$ allowance for adversarial messages does not cover
+this.
+\item DTRU-Light over $x^n+1$ has no ring pairing ($\lambda_{\max}$ is only
+$1.27\times$ the diagonal) and its median DFR is below the claim. Its
+spread across ciphertexts is however the largest ($\sigma=9.6$ bits at
+$n=512$), and the two estimates of $\E[p]$, $2^{-137}$ and $2^{-122}$,
+straddle the 128-bit level.
+\end{enumerate}
+
+\section{Failure boosting against DTRU}
+\label{sec:boost}
+
+\subsection{Cost of the first failure}
+By~\eqref{eq:identity} the classical total work for one failure is at least
+$1/\E[p]$. Table~\ref{tab:boost} lists it for the sample-mean and the
+normal-tail estimates, together with the nominal level and the NTRU
+Core-SVP estimates (ours, from the lattice estimator, and the designers').
+
+\begin{table}[t]
+\centering\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrl}
+\toprule
+Set & level & Core-SVP ours/claimed & $\log_2$ work (sample mean) & (normal tail) & verdict (DFR)\\
+\midrule
+Light & 128 & 132.3 / 132 & 137.4 & 121.7 & borderline\\
+648 & 128 & 164.7 / 164 & 85.4 & 83.6 & $-43$ bits\\
+768 & 192 & 199.4 / 195 & 97.9 & 86.0 & $-94$ to $-106$\\
+1024 & 256 & 277.7 / 270 & 104.6 & 98.1 & $-151$ to $-158$\\
+Prime & 256 & 292.6 / 280 & 96.3 & 79.8 & $-160$ to $-176$\\
+1536 & 384 & 416.7 / 411 & 100.7 & 93.9 & $-283$ to $-290$\\
+2048 & 512 & 512.5 / 567 & 110.8 & 109.1 & $-401$\\
+\bottomrule
+\end{tabular}}
+\caption{Classical work for one decryption failure (decapsulations),
+without a query cap. Core-SVP values are for the NTRU key-recovery problem;
+the DTRU-2048 estimate is a primal-BDD fallback with low confidence.}
+\label{tab:boost}
+\end{table}
+
+Filtering within the sample (keeping the weakest quarter, or the single
+weakest ciphertext) leaves the classical total unchanged and saves $3$--$4$
+bits quantumly, as~\eqref{eq:identity} predicts. We also tried tilting the
+distributions of $r,e$ and of the codeword weight (exponential families on
+the expected covariance): on DTRU-2048 this gains only a few bits, because
+$\|r\|^2$ is concentrated at $n=2048$ and the weak ciphertexts are those
+with a large top eigenvalue (correlation $0.99$ between $\log_2 p$ and the
+top eigenvalue on the ball statistic), not those with a large norm.
+
+\subsection{Precomputation versus oracle queries}
+\label{sec:cap}
+Following~\cite{DVV19}, the offline and online costs separate. We fit
+$\log_2 p$ by a normal law and ask for the threshold $f_t$ at which the
+conditional failure probability is $2^{-80}$, and then for the threshold at
+which $\beta^{-1}=2^{64}$.
+
+\begin{table}[t]
+\centering\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+& \multicolumn{3}{c}{$f_t=2^{-80}$} & \multicolumn{4}{c}{oracle capped at $2^{64}$}\\
+\cmidrule(lr){2-4}\cmidrule(lr){5-8}
+Set & \#$\{p>2^{-80}\}$/200 & precomp & oracle & precomp & oracle & classical & quantum\\
+\midrule
+648 & \textbf{2} & 8.3 & 75.4 & 24.1 & 62.2 & 86.3 & 74.2\\
+768 & 0 & 13.0 & 73.0 & 25.9 & 60.6 & 86.6 & 73.6\\
+Prime & 0 & 12.1 & 67.7 & 22.3 & 57.5 & 79.8 & 68.7\\
+1024 & 0 & 21.8 & 77.1 & 41.1 & 62.4 & 103.4 & 82.9\\
+1536 & 0 & 17.6 & 76.9 & 36.6 & 62.4 & 99.0 & 80.7\\
+2048 & 0 & 37.4 & 78.7 & 67.3 & 63.1 & 130.4 & 96.8\\
+Light & 0 & 46.8 & 77.7 & 67.5 & 62.3 & 129.8 & 96.1\\
+\bottomrule
+\end{tabular}}
+\caption{Offline precomputation ($\log_2\alpha^{-1}$ encapsulations) and
+oracle queries ($\log_2\beta^{-1}$) under the normal-tail fit. For DTRU-648
+the $2^{-80}$ threshold is inside the sample: two of 200 honest ciphertexts
+have $p>2^{-80}$ (weakest $2^{-78.7}$). The $2^{64}$-cap entries for
+DTRU-2048 and DTRU-Light are $9\sigma$ extrapolations.}
+\label{tab:cap}
+\end{table}
+
+For DTRU-648, -768 and -Prime the first failure fits into a $2^{64}$ query
+budget after $2^{22}$--$2^{26}$ offline encapsulations; for DTRU-1024 and
+-1536 the offline part is $2^{37}$--$2^{41}$. The total work remains
+$2^{80}$--$2^{130}$, so none of this is a practical attack; the point is
+that the designers' query-limit argument (``$2^{64}\cdot 2^{-147}$ is
+negligible'') does not hold once weak ciphertexts are selected offline.
+
+\section{After the first failure}
+\label{sec:after}
+
+A failing ciphertext with its most probable pattern $(I,D,s)$ tells the
+adversary that $\langle s,\Err_I\rangle=a_g^\top g+a_f^\top f'+\langle
+s,u_I\rangle$ exceeded $|D|(q+1)/4$, where $a_g=M_r[I]^\top s$ and
+$a_f=M_v[I]^\top s$ are known. Implicit rejection hides the block and the
+pattern, so the posterior is a mixture whose largest component has weight
+around $10\%$; the sign of $\langle a,x\rangle$ is not revealed either.
+
+For DTRU-2048 (24 honest ciphertexts) the most probable pattern has standard
+score $12.97$ (median), the direction $a$ has participation ratio
+$(\sum a_i^2)^2/\sum a_i^4\approx 891$ out of $4096$ coordinates, and
+directions of different ciphertexts have absolute cosine $0.19$ (median)
+to $0.27$ (max). Conditioning on a first failure along $a_1$, a second
+ciphertext with direction $a_2$ at correlation $\rho$ fails with standard
+score $z'=(z-\rho z)/\sqrt{1-\rho^2}$, i.e.\ $10.7$ ($\rho=0.19$) to $9.8$
+($\rho=0.27$), so its failure probability is $2^{-86}$ to $2^{-72}$
+instead of $2^{-121}$. This is the mechanism of directional failure
+boosting~\cite{DRV20}: after the first failure, further failures are cheap,
+and the total cost is that of the first one.
+
+On the $n=64$ toy instance we collected 150 real decoder failures for one
+key and estimated the secret up to sign by the top eigenvector of
+$\sum_k a_ka_k^\top$: the estimate has correlation $0.22$ with the true
+secret (random directions: $0.07$), with only $z\approx3.5$ per failure.
+At the real parameters each failure carries $z\approx13$. We did not run
+the final lattice-reduction step and do not claim a completed key recovery.
+
+\section{Screening of other NGCC lattice KEMs}
+\label{sec:others}
+
+The same cost model was applied, more lightly, to the NGCC lattice KEMs
+whose claimed DFR is below the nominal level: Scabbard (MLWR, B2-Minal
+code), Rudraksh2 (MLWE with compression, same code), ZEN and NEV. For
+Scabbard and Rudraksh2 the absolute DFR was anchored to the designers'
+published value and only the ciphertext-to-ciphertext spread was modelled
+(through the squared norm of the encapsulation secret and the fraction $w$
+of the noise variance it controls, with the Chernoff cost of a large norm);
+for ZEN we checked the designers' own failure-boosting arithmetic; for NEV we
+re-sampled the block-norm means and re-evaluated their Chernoff bound at
+$2^{64}$ and $2^{80}$ query caps.
+
+\begin{table}[t]
+\centering\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrl}
+\toprule
+Set & level & claimed $\log_2\dfr$ & classical work at $2^{80}$ queries & note\\
+\midrule
+Rudraksh2-128-I & 128 & $-100$ & $2^{97}$--$2^{123}$ & model vs.\ anchored; quantum $2^{89}$--$2^{101}$\\
+Rudraksh2-128-II & 128 & $-100$ & unreachable & weakest ciphertext $\approx2^{-86}$\\
+Rudraksh2-256-I/II & 256 & $-161/-167$ & unreachable & $\approx2^{-87}$ / $2^{-130}$\\
+Rudraksh2-512-I/II & 512 & $-160/-160$ & $2^{1680}$ / unreachable & \\
+Scabbard-128 & 128 & $-99$ & $2^{240}$ & anchored; $w=0.26$\\
+Scabbard-256/512 & 256/512 & $-125/-125$ & unreachable / $2^{923}$ & $w=0.06$ / $0.49$\\
+ZEN-512 (769$\to$256) & 512 & $-179.6$ & $2^{748}$ & designers' Table~2 verified\\
+NEV-R3 & 512 & $-147$ & $2^{542}$ & matches designers' Table~7\\
+NEV-C2 / R2 & 256 & $-162/-158$ & $2^{324}$ / $2^{369}$ & within a few bits of Table~7\\
+\bottomrule
+\end{tabular}}
+\caption{Screening of other NGCC lattice KEMs. ``unreachable'' means that
+even the maximal encapsulation-secret norm does not push the failure
+probability to the threshold required by the query cap.}
+\label{tab:others}
+\end{table}
+
+Only Rudraksh2-128-I ends near its level: with $2^{80}$ decryptions the
+classical total is $2^{97}$ (our Gaussian model, $\dfr=2^{-92.5}$) to
+$2^{123}$ (anchored to the claimed $2^{-100}$); with $2^{64}$ decryptions
+it rises to $2^{256}$. For the other schemes either the weakest honest
+ciphertext cannot reach the threshold or the offline search already exceeds
+the nominal level. These schemes use one-bit-per-coefficient or
+two-coefficient codes over $x^n+1$ and do not exhibit the block-pairing
+structure of DTRU; the 100-bit gaps between isotropic models and published
+DFRs that we saw for Scabbard-256 and Rudraksh2-256-II are due to
+two-dimensional decoding regions and were resolved by anchoring, not by
+our model.
+
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{What is wrong and how to fix it.}
+The specification computes the per-coefficient variance correctly (we
+reproduce its numbers) but then treats the 16 coefficients of a decoding
+block as independent. In $x^n-x^{n/2}+1$ this is false in a structured way:
+the block is made of ring-paired coefficients, and the repetition code
+places the same message bit on both members of each pair. The correct
+computation is cheap: form the $16\times16$ conditional covariance
+$\Sigma_I$ per block and evaluate the half-space union of
+Lemma~\ref{lem:region} (or, conservatively, the generalised $\chi^2$ tail of
+the ball on the eigenvalues of $\Sigma_I$). At the design stage one can also
+remove the coincidence: if the two octets of a decoding block are not
+ring-paired (for instance by using a repetition offset different from
+$n/2$, or by interleaving block positions so that no block contains both
+$j$ and $j+n/2$), the pairing correlation moves to different blocks where
+it does not affect the per-block tail. We have not evaluated the
+correctness or cost impact of such a change.
+
+\paragraph{Security levels.}
+In the DFR metric, six of seven DTRU sets miss their nominal level by
+$43$--$400$ bits, and DTRU-648 does so with a first-failure cost of about
+$2^{85}$ that fits into a $2^{64}$-query budget after $2^{24}$ offline
+encapsulations. The FO advantage term $(q_H+q_D)\dfr$ of the
+specification's Theorem~3 becomes constant at $q_D\approx2^{85}$--$2^{111}$
+with the corrected $\dfr$. None of this yields a practical attack, and
+DTRU-Light is unaffected in structure.
+
+\paragraph{Limitations.}
+Our estimate of $\E[p]$ is a tail quantity: the sample mean of 200
+ciphertexts and the normal-tail extrapolation differ by $1$--$2$ bits for
+DTRU-648 and -2048 and by $12$--$16$ bits for DTRU-768, -Prime and -Light.
+Narrowing this requires importance sampling of ciphertexts tilted towards
+large top eigenvalues, which we leave open. Failure probabilities are
+averaged over keys; weak keys were not studied. The layout of DoubleE$_8$
+for DTRU-Prime is our assumption, and the specification's $20\%$ larger
+variance for that set is unexplained. The directional-boosting figures are
+single-hyperplane conditional estimates, not a re-implementation
+of~\cite{DRV20}, and no lattice reduction on a failure-augmented instance
+was run.
+
+\section{Conclusion}
+For lattice KEMs that decode blocks of coefficients with an error-correcting
+code, the DFR analysis must account for correlations inside a block. DTRU's
+tricyclotomic and LPPNF instantiations pair the coefficients of every
+decoding block through the ring itself, and its repetition encoding
+reinforces the pairing. Correcting the model raises the failure rate of six
+parameter sets by $50$--$110$ bits and places the cost of a first decryption
+failure between $2^{85}$ and $2^{111}$ decapsulations, below every nominal
+level from $128$ to $512$. The computation that exposes this uses only
+$16\times16$ covariance matrices and can be added to any DFR script.
+
+\paragraph{Reproducibility.}
+All scripts (\texttt{dfr\_all\_sets.py}, \texttt{ml\_decoder\_check.py},
+\texttt{exact\_cgf\_check.py}, \texttt{recover.py}, \texttt{boost\_screen.py})
+and their JSON outputs are provided with this paper. They depend only on
+NumPy, SciPy and mpmath.
+
+\begin{thebibliography}{9}
+\bibitem{DTRU}
+DTRU team.
+\newblock DTRU: Algorithm specifications and supporting documentation,
+version 1.0.
+\newblock NGCC submission, June 2026.
+
+\bibitem{DVV19}
+J.-P.\ D'Anvers, F.\ Vercauteren, and I.\ Verbauwhede.
+\newblock On the impact of decryption failures on the security of LWE/LWR
+based schemes.
+\newblock In \emph{PKC 2019}. IACR ePrint 2018/1089.
+
+\bibitem{DRV20}
+J.-P.\ D'Anvers, M.\ Rossi, and F.\ Virdia.
+\newblock (One) failure is not an option: Bootstrapping the search for
+failures in lattice-based encryption schemes.
+\newblock In \emph{EUROCRYPT 2020}. IACR ePrint 2019/1399.
+
+\bibitem{DB22}
+J.-P.\ D'Anvers and S.\ Batsleer.
+\newblock Multitarget decryption failure attacks and their application to
+Saber and Kyber.
+\newblock In \emph{PKC 2022}. IACR ePrint 2021/193.
+
+\bibitem{FWZ22}
+B.\ Fang, W.\ Wang, and Y.\ Zhao.
+\newblock Tight analysis of decryption failure probability of Kyber in
+reality.
+\newblock IACR ePrint 2022/212.
+
+\bibitem{LS19}
+V.\ Lyubashevsky and G.\ Seiler.
+\newblock NTTRU: Truly fast NTRU using NTT.
+\newblock \emph{IACR Trans.\ CHES} 2019(3). IACR ePrint 2019/040.
+
+\bibitem{Estimator}
+M.\ R.\ Albrecht et al.
+\newblock Lattice estimator.
+\newblock \url{https://github.com/malb/lattice-estimator}.
+\end{thebibliography}
+
+\end{document}

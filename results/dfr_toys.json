@@ -1,0 +1,80 @@
+{
+  "tri": {
+    "ring": "tri",
+    "n": 64,
+    "q": 193,
+    "q2": 64,
+    "etas": [
+      5,
+      1,
+      2,
+      1
+    ],
+    "trials": 20000,
+    "keys": 40,
+    "algebra_mismatch": 0,
+    "decoder_fails": 24,
+    "ball_fails": 744,
+    "fails_per_key_min_max": [
+      0,
+      6
+    ],
+    "log2_decoder": -9.702749878828293,
+    "log2_ball": -4.748553568441418,
+    "log2_model_gauss_union_mean_p": -8.062945565335294,
+    "log2_model_gauss_union_median": -10.010009211163862,
+    "second_moment_ratio_mean": 1.0320020269950112
+  },
+  "pow2": {
+    "ring": "pow2",
+    "n": 64,
+    "q": 89,
+    "q2": 32,
+    "etas": [
+      2,
+      1,
+      1,
+      2
+    ],
+    "trials": 20000,
+    "keys": 40,
+    "algebra_mismatch": 0,
+    "decoder_fails": 71,
+    "ball_fails": 4257,
+    "fails_per_key_min_max": [
+      0,
+      21
+    ],
+    "log2_decoder": -8.137965260044767,
+    "log2_ball": -2.232091004767742,
+    "log2_model_gauss_union_mean_p": -6.918104558921303,
+    "log2_model_gauss_union_median": -8.362003546925688,
+    "second_moment_ratio_mean": 1.0214609032493769
+  },
+  "lppnf": {
+    "ring": "lppnf",
+    "n": 61,
+    "q": 149,
+    "q2": 64,
+    "etas": [
+      2,
+      1,
+      2,
+      1
+    ],
+    "trials": 20000,
+    "keys": 40,
+    "algebra_mismatch": 0,
+    "decoder_fails": 58,
+    "ball_fails": 1462,
+    "fails_per_key_min_max": [
+      0,
+      15
+    ],
+    "log2_decoder": -8.429731384421878,
+    "log2_ball": -3.773984783597012,
+    "log2_model_gauss_union_mean_p": -6.619672168193338,
+    "log2_model_gauss_union_median": -9.189079427177495,
+    "second_moment_ratio_mean": 1.0063835417479046
+  }
+}
