@@ -1,0 +1,770 @@
+{
+  "minal": [
+    {
+      "name": "Scabbard-128",
+      "level": 128,
+      "claimed_log2_dfr": -99,
+      "model_log2_dfr": -67.05434517240046,
+      "variance_fraction_controlled": 0.2642187575890038,
+      "anchored_sigma": 178.37968230378323,
+      "model_sigma": 215.23301326701718,
+      "min_radius": 2111.513671875,
+      "log2_p_at_mean": -98.99999999999883,
+      "log2_p_at_max_secret": -53.84468771699148,
+      "budgets": {
+        "64": {
+          "reachable": true,
+          "scale": 2.975896262092962,
+          "precomp_bits": 718.7298173281962,
+          "oracle_bits": 64.0,
+          "classical_bits": 782.7298173281962,
+          "quantum_bits": 423.3649086640981
+        },
+        "80": {
+          "reachable": true,
+          "scale": 1.8669964653352615,
+          "precomp_bits": 160.301276514359,
+          "oracle_bits": 80.0,
+          "classical_bits": 240.301276514359,
+          "quantum_bits": 160.15063825717948
+        }
+      },
+      "model_budgets": {
+        "64": {
+          "reachable": true,
+          "scale": 1.172053297867952,
+          "precomp_bits": 7.639079300242821,
+          "oracle_bits": 64.0,
+          "classical_bits": 71.63907930024283,
+          "quantum_bits": 67.81953965012141
+        },
+        "80": {
+          "reachable": true,
+          "scale": 1.0,
+          "precomp_bits": 0.0,
+          "oracle_bits": 80.0,
+          "classical_bits": 80.0,
+          "quantum_bits": 80.0
+        }
+      }
+    },
+    {
+      "name": "Scabbard-256",
+      "level": 256,
+      "claimed_log2_dfr": -125,
+      "model_log2_dfr": -26.652477412611162,
+      "variance_fraction_controlled": 0.05824005824005824,
+      "anchored_sigma": 76.8908970416952,
+      "model_sigma": 157.24264688690533,
+      "min_radius": 1023.4990234375,
+      "log2_p_at_mean": -124.9999999999996,
+      "log2_p_at_max_secret": -105.85829135600915,
+      "budgets": {
+        "64": {
+          "reachable": false,
+          "best_log2_p": -105.85829135600915,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        },
+        "80": {
+          "reachable": false,
+          "best_log2_p": -105.85829135600915,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        }
+      },
+      "model_budgets": {
+        "64": {
+          "reachable": true,
+          "scale": 1.0,
+          "precomp_bits": 0.0,
+          "oracle_bits": 64.0,
+          "classical_bits": 64.0,
+          "quantum_bits": 64.0
+        },
+        "80": {
+          "reachable": true,
+          "scale": 1.0,
+          "precomp_bits": 0.0,
+          "oracle_bits": 80.0,
+          "classical_bits": 80.0,
+          "quantum_bits": 80.0
+        }
+      }
+    },
+    {
+      "name": "Scabbard-512",
+      "level": 512,
+      "claimed_log2_dfr": -125,
+      "model_log2_dfr": -151.6089055349652,
+      "variance_fraction_controlled": 0.49181115220210364,
+      "anchored_sigma": 79.19340559116448,
+      "model_sigma": 72.14741852623696,
+      "min_radius": 1058.5380859375,
+      "log2_p_at_mean": -124.99999999999832,
+      "log2_p_at_max_secret": -47.32309637260076,
+      "budgets": {
+        "64": {
+          "reachable": true,
+          "scale": 2.792267168578204,
+          "precomp_bits": 2133.4086749290855,
+          "oracle_bits": 64.0,
+          "classical_bits": 2197.4086749290855,
+          "quantum_bits": 1130.7043374645427
+        },
+        "80": {
+          "reachable": true,
+          "scale": 2.0749689939717477,
+          "precomp_bits": 842.5676239008004,
+          "oracle_bits": 80.0,
+          "classical_bits": 922.5676239008004,
+          "quantum_bits": 501.2838119504002
+        }
+      },
+      "model_budgets": {
+        "64": {
+          "reachable": true,
+          "scale": 3.5759715298762993,
+          "precomp_bits": 4272.055390538732,
+          "oracle_bits": 64.0,
+          "classical_bits": 4336.055390538732,
+          "quantum_bits": 2200.027695269366
+        },
+        "80": {
+          "reachable": true,
+          "scale": 2.7117279303910387,
+          "precomp_bits": 1960.463962257345,
+          "oracle_bits": 80.0,
+          "classical_bits": 2040.463962257345,
+          "quantum_bits": 1060.2319811286725
+        }
+      }
+    },
+    {
+      "name": "Rudraksh2-128-I",
+      "level": 128,
+      "claimed_log2_dfr": -100,
+      "model_log2_dfr": -92.45148174233815,
+      "variance_fraction_controlled": 0.8169197026685029,
+      "anchored_sigma": 36.15084395523034,
+      "model_sigma": 37.552301076962316,
+      "min_radius": 430.1571387052536,
+      "log2_p_at_mean": -99.9999999999995,
+      "log2_p_at_max_secret": -26.421561413292924,
+      "budgets": {
+        "64": {
+          "reachable": true,
+          "scale": 1.655663792113463,
+          "precomp_bits": 192.17834809505456,
+          "oracle_bits": 64.0,
+          "classical_bits": 256.17834809505456,
+          "quantum_bits": 160.08917404752728
+        },
+        "80": {
+          "reachable": true,
+          "scale": 1.2945558504559649,
+          "precomp_bits": 42.87989622002869,
+          "oracle_bits": 80.0,
+          "classical_bits": 122.87989622002868,
+          "quantum_bits": 101.43994811001434
+        }
+      },
+      "model_budgets": {
+        "64": {
+          "reachable": true,
+          "scale": 1.5179750486590669,
+          "precomp_bits": 124.1397092715073,
+          "oracle_bits": 64.0,
+          "classical_bits": 188.1397092715073,
+          "quantum_bits": 126.06985463575364
+        },
+        "80": {
+          "reachable": true,
+          "scale": 1.1833173560998809,
+          "precomp_bits": 17.15491973292819,
+          "oracle_bits": 80.0,
+          "classical_bits": 97.15491973292819,
+          "quantum_bits": 88.5774598664641
+        }
+      }
+    },
+    {
+      "name": "Rudraksh2-128-II",
+      "level": 128,
+      "claimed_log2_dfr": -100,
+      "model_log2_dfr": -102.8799893987634,
+      "variance_fraction_controlled": 0.15690571752738114,
+      "anchored_sigma": 43.437159653065926,
+      "model_sigma": 42.842702610263714,
+      "min_radius": 515.4806102514267,
+      "log2_p_at_mean": -99.99999999999933,
+      "log2_p_at_max_secret": -86.01228069302583,
+      "budgets": {
+        "64": {
+          "reachable": false,
+          "best_log2_p": -86.01228069302583,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        },
+        "80": {
+          "reachable": false,
+          "best_log2_p": -86.01228069302583,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        }
+      },
+      "model_budgets": {
+        "64": {
+          "reachable": false,
+          "best_log2_p": -88.5045830586161,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        },
+        "80": {
+          "reachable": false,
+          "best_log2_p": -88.5045830586161,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        }
+      }
+    },
+    {
+      "name": "Rudraksh2-256-I",
+      "level": 256,
+      "claimed_log2_dfr": -161,
+      "model_log2_dfr": -186.24697998280064,
+      "variance_fraction_controlled": 0.8148839309923305,
+      "anchored_sigma": 28.553654214195543,
+      "model_sigma": 26.58663447779228,
+      "min_radius": 430.1571387052536,
+      "log2_p_at_mean": -160.9999999999995,
+      "log2_p_at_max_secret": -86.9619211351797,
+      "budgets": {
+        "64": {
+          "reachable": false,
+          "best_log2_p": -86.9619211351797,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        },
+        "80": {
+          "reachable": false,
+          "best_log2_p": -86.9619211351797,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        }
+      },
+      "model_budgets": {
+        "64": {
+          "reachable": false,
+          "best_log2_p": -100.9299963752743,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        },
+        "80": {
+          "reachable": false,
+          "best_log2_p": -100.9299963752743,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        }
+      }
+    },
+    {
+      "name": "Rudraksh2-256-II",
+      "level": 256,
+      "claimed_log2_dfr": -167,
+      "model_log2_dfr": -89.76922495225206,
+      "variance_fraction_controlled": 0.2792820042682119,
+      "anchored_sigma": 33.60321197892816,
+      "model_sigma": 45.41400102731178,
+      "min_radius": 514.7914083003998,
+      "log2_p_at_mean": -166.99999999999883,
+      "log2_p_at_max_secret": -129.775212889825,
+      "budgets": {
+        "64": {
+          "reachable": false,
+          "best_log2_p": -129.775212889825,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        },
+        "80": {
+          "reachable": false,
+          "best_log2_p": -129.775212889825,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        }
+      },
+      "model_budgets": {
+        "64": {
+          "reachable": false,
+          "best_log2_p": -69.29764676947526,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        },
+        "80": {
+          "reachable": true,
+          "scale": 1.4167144124621334,
+          "precomp_bits": 297.58933931853073,
+          "oracle_bits": 80.0,
+          "classical_bits": 377.58933931853073,
+          "quantum_bits": 228.79466965926537
+        }
+      }
+    },
+    {
+      "name": "Rudraksh2-512-I",
+      "level": 512,
+      "claimed_log2_dfr": -160,
+      "model_log2_dfr": -152.5949020661515,
+      "variance_fraction_controlled": 0.9007905062107031,
+      "anchored_sigma": 65.8992363941077,
+      "model_sigma": 67.43231565895832,
+      "min_radius": 992.9655792713165,
+      "log2_p_at_mean": -159.99999999999778,
+      "log2_p_at_max_secret": -39.33110189061013,
+      "budgets": {
+        "64": {
+          "reachable": true,
+          "scale": 2.542216101899095,
+          "precomp_bits": 3241.61226989915,
+          "oracle_bits": 64.0,
+          "classical_bits": 3305.61226989915,
+          "quantum_bits": 1684.806134949575
+        },
+        "80": {
+          "reachable": true,
+          "scale": 2.044774275810115,
+          "precomp_bits": 1599.6127327976708,
+          "oracle_bits": 80.0,
+          "classical_bits": 1679.6127327976708,
+          "quantum_bits": 879.8063663988354
+        }
+      },
+      "model_budgets": {
+        "64": {
+          "reachable": true,
+          "scale": 2.4229841705635518,
+          "precomp_bits": 2800.9570278504666,
+          "oracle_bits": 64.0,
+          "classical_bits": 2864.9570278504666,
+          "quantum_bits": 1464.4785139252333
+        },
+        "80": {
+          "reachable": true,
+          "scale": 1.9479039867503616,
+          "precomp_bits": 1340.833675648089,
+          "oracle_bits": 80.0,
+          "classical_bits": 1420.833675648089,
+          "quantum_bits": 750.4168378240445
+        }
+      }
+    },
+    {
+      "name": "Rudraksh2-512-II",
+      "level": 512,
+      "claimed_log2_dfr": -160,
+      "model_log2_dfr": -148.65613677713347,
+      "variance_fraction_controlled": 0.9110653568578896,
+      "anchored_sigma": 34.31277025763658,
+      "model_sigma": 35.559158346974044,
+      "min_radius": 515.4806102514267,
+      "log2_p_at_mean": -159.99999999999977,
+      "log2_p_at_max_secret": -81.3482133878356,
+      "budgets": {
+        "64": {
+          "reachable": false,
+          "best_log2_p": -81.3482133878356,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        },
+        "80": {
+          "reachable": false,
+          "best_log2_p": -81.3482133878356,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        }
+      },
+      "model_budgets": {
+        "64": {
+          "reachable": false,
+          "best_log2_p": -75.38454071982015,
+          "precomp_bits": null,
+          "oracle_bits": null,
+          "classical_bits": null,
+          "quantum_bits": null
+        },
+        "80": {
+          "reachable": true,
+          "scale": 1.8864294000133057,
+          "precomp_bits": 3158.5551498648033,
+          "oracle_bits": 80.0,
+          "classical_bits": 3238.5551498648033,
+          "quantum_bits": 1659.2775749324016
+        }
+      }
+    }
+  ],
+  "nev": [
+    {
+      "name": "NEV-C1",
+      "mu_sampled": 37.4784,
+      "mu_published": 37.47,
+      "published_classical": 288,
+      "64": {
+        "c": 1.5053934419764594,
+        "theta": 0.09011764705882352,
+        "precomp_bits": 421.0588359114042,
+        "oracle_bits": 64.0,
+        "classical_bits": 485.0588359114042,
+        "quantum_bits": 274.5294179557021
+      },
+      "80": {
+        "c": 1.3666583378748127,
+        "theta": 0.06494117647058824,
+        "precomp_bits": 215.14608816409742,
+        "oracle_bits": 80.0,
+        "classical_bits": 295.1460881640974,
+        "quantum_bits": 187.5730440820487
+      }
+    },
+    {
+      "name": "NEV-R1",
+      "mu_sampled": 48.0102,
+      "mu_published": 48.0,
+      "published_classical": 151,
+      "64": {
+        "c": 1.3906500981906316,
+        "theta": 0.027176470588235295,
+        "precomp_bits": 148.16783995506177,
+        "oracle_bits": 64.0,
+        "classical_bits": 212.16783995506177,
+        "quantum_bits": 138.08391997753088
+      },
+      "80": {
+        "c": 1.2624895916003156,
+        "theta": 0.027176470588235295,
+        "precomp_bits": 66.24114976678753,
+        "oracle_bits": 80.0,
+        "classical_bits": 146.24114976678754,
+        "quantum_bits": 113.12057488339377
+      }
+    },
+    {
+      "name": "NEV-D1",
+      "mu_sampled": 112.0072,
+      "mu_published": 112.0,
+      "published_classical": 149,
+      "64": {
+        "c": 1.4004572215911297,
+        "theta": 0.014588235294117647,
+        "precomp_bits": 144.09870947890093,
+        "oracle_bits": 64.0,
+        "classical_bits": 208.09870947890093,
+        "quantum_bits": 136.04935473945045
+      },
+      "80": {
+        "c": 1.2713929032477085,
+        "theta": 0.014588235294117647,
+        "precomp_bits": 40.04645513187856,
+        "oracle_bits": 80.0,
+        "classical_bits": 120.04645513187856,
+        "quantum_bits": 100.02322756593928
+      }
+    },
+    {
+      "name": "NEV-C2",
+      "mu_sampled": 21.4322,
+      "mu_published": 21.37,
+      "published_classical": 324,
+      "64": {
+        "c": 1.5090960878958783,
+        "theta": 0.07752941176470587,
+        "precomp_bits": 440.87675314995886,
+        "oracle_bits": 64.0,
+        "classical_bits": 504.87675314995886,
+        "quantum_bits": 284.43837657497943
+      },
+      "80": {
+        "c": 1.3716072616927455,
+        "theta": 0.05235294117647059,
+        "precomp_bits": 236.75518819772157,
+        "oracle_bits": 80.0,
+        "classical_bits": 316.75518819772157,
+        "quantum_bits": 198.37759409886078
+      }
+    },
+    {
+      "name": "NEV-R2",
+      "mu_sampled": 32.1753,
+      "mu_published": 32.0,
+      "published_classical": 369,
+      "64": {
+        "c": 1.4954567430085044,
+        "theta": 0.06494117647058824,
+        "precomp_bits": 561.303132849604,
+        "oracle_bits": 64.0,
+        "classical_bits": 625.303132849604,
+        "quantum_bits": 344.651566424802
+      },
+      "80": {
+        "c": 1.3592105530654386,
+        "theta": 0.05235294117647059,
+        "precomp_bits": 292.6236865488392,
+        "oracle_bits": 80.0,
+        "classical_bits": 372.6236865488392,
+        "quantum_bits": 226.3118432744196
+      }
+    },
+    {
+      "name": "NEV-D2",
+      "mu_sampled": 64.0051,
+      "mu_published": 64.0,
+      "published_classical": 707,
+      "64": {
+        "c": 1.7360937563786025,
+        "theta": 0.027176470588235295,
+        "precomp_bits": 929.0337786291403,
+        "oracle_bits": 64.0,
+        "classical_bits": 993.0337786291403,
+        "quantum_bits": 528.5168893145701
+      },
+      "80": {
+        "c": 1.5779239124186395,
+        "theta": 0.027176470588235295,
+        "precomp_bits": 592.2891751695264,
+        "oracle_bits": 80.0,
+        "classical_bits": 672.2891751695264,
+        "quantum_bits": 376.1445875847632
+      }
+    },
+    {
+      "name": "NEV-C3",
+      "mu_sampled": 18.6357,
+      "mu_published": 18.74,
+      "published_classical": 1098,
+      "64": {
+        "c": 1.5079757665455271,
+        "theta": 0.29152941176470587,
+        "precomp_bits": 2312.0476514765683,
+        "oracle_bits": 64.0,
+        "classical_bits": 2376.0476514765683,
+        "quantum_bits": 1220.0238257382841
+      },
+      "80": {
+        "c": 1.372139449720685,
+        "theta": 0.17823529411764705,
+        "precomp_bits": 1098.9205285789562,
+        "oracle_bits": 80.0,
+        "classical_bits": 1178.9205285789562,
+        "quantum_bits": 629.4602642894781
+      }
+    },
+    {
+      "name": "NEV-R3",
+      "mu_sampled": 26.5956,
+      "mu_published": 26.67,
+      "published_classical": 542,
+      "64": {
+        "c": 1.4411912171927406,
+        "theta": 0.07752941176470587,
+        "precomp_bits": 921.2139334290536,
+        "oracle_bits": 64.0,
+        "classical_bits": 985.2139334290536,
+        "quantum_bits": 524.6069667145268
+      },
+      "80": {
+        "c": 1.311370757788254,
+        "theta": 0.05235294117647059,
+        "precomp_bits": 462.275899620893,
+        "oracle_bits": 80.0,
+        "classical_bits": 542.2758996208929,
+        "quantum_bits": 311.13794981044646
+      }
+    },
+    {
+      "name": "NEV-D3",
+      "mu_sampled": 47.7404,
+      "mu_published": 48.0,
+      "published_classical": 2994,
+      "64": {
+        "c": 2.016119076838468,
+        "theta": 0.07752941176470587,
+        "precomp_bits": 4495.742306005847,
+        "oracle_bits": 64.0,
+        "classical_bits": 4559.742306005847,
+        "quantum_bits": 2311.8711530029236
+      },
+      "80": {
+        "c": 1.8345099318152673,
+        "theta": 0.05235294117647059,
+        "precomp_bits": 2911.766114642957,
+        "oracle_bits": 80.0,
+        "classical_bits": 2991.766114642957,
+        "quantum_bits": 1535.8830573214784
+      }
+    }
+  ],
+  "zen": [
+    {
+      "name": "ZEN-light 769->128",
+      "log2_dfr": -135.1,
+      "log2_alpha": -78.8,
+      "classical_check": 158.8,
+      "quantum_check": 119.4,
+      "published_classical": 158.8,
+      "published_quantum": 119.4
+    },
+    {
+      "name": "ZEN-128 769->256",
+      "log2_dfr": -128.3,
+      "log2_alpha": -69.1,
+      "classical_check": 149.1,
+      "quantum_check": 114.55,
+      "published_classical": 149.1,
+      "published_quantum": 114.5
+    },
+    {
+      "name": "ZEN-256 769->256",
+      "log2_dfr": -175.1,
+      "log2_alpha": -456.2,
+      "classical_check": 536.2,
+      "quantum_check": 308.1,
+      "published_classical": 536.2,
+      "published_quantum": 308.1
+    },
+    {
+      "name": "ZEN-256 backup 769->769",
+      "log2_dfr": -256.3,
+      "log2_alpha": -2000.5,
+      "classical_check": 2080.5,
+      "quantum_check": 1080.25,
+      "published_classical": 2080.5,
+      "published_quantum": 1080.2
+    },
+    {
+      "name": "ZEN-512 769->256",
+      "log2_dfr": -179.6,
+      "log2_alpha": -668.4,
+      "classical_check": 748.4,
+      "quantum_check": 414.2,
+      "published_classical": 748.4,
+      "published_quantum": 414.2
+    },
+    {
+      "name": "ZEN-512 backup 769->769",
+      "log2_dfr": -339.6,
+      "log2_alpha": -3661.3,
+      "classical_check": 3741.3,
+      "quantum_check": 1910.65,
+      "published_classical": 3741.3,
+      "published_quantum": 1910.6
+    }
+  ],
+  "toys": [
+    {
+      "scheme": "Scabbard-toy",
+      "params": {
+        "ell": 2,
+        "n": 16,
+        "q": 256,
+        "p": 32,
+        "t": 8,
+        "eta": 2,
+        "beta": 12
+      },
+      "trials": 2000,
+      "decrypt_failures": 1467,
+      "predicate_failures": 1467,
+      "predicate_disagreements": 0,
+      "empirical_coeff_var": 351.9415,
+      "model_coeff_var": 341.25,
+      "second_moment_ratio": 1.031330402930403,
+      "controlled_fraction": 0.49230769230769234
+    },
+    {
+      "scheme": "Rudraksh2-toy",
+      "params": {
+        "ell": 2,
+        "n": 16,
+        "q": 97,
+        "p": 32,
+        "t": 16,
+        "eta": 1,
+        "beta": 8
+      },
+      "trials": 2000,
+      "decrypt_failures": 699,
+      "predicate_failures": 699,
+      "predicate_disagreements": 0,
+      "empirical_coeff_var": 30.90934375,
+      "model_coeff_var": 31.814127604166668,
+      "second_moment_ratio": 0.9715603122793735,
+      "controlled_fraction": 0.5029212241515149
+    },
+    {
+      "scheme": "NEV-toy",
+      "params": {
+        "n": 32,
+        "k": 4,
+        "q": 61,
+        "eta": 2,
+        "threshold": 60.0
+      },
+      "trials": 4000,
+      "l1_failures": 63,
+      "l1_dual_mismatches": 0,
+      "empirical_coeff_var": 64.030734375,
+      "model_coeff_var": 64.0,
+      "second_moment_ratio": 1.000480224609375
+    },
+    {
+      "scheme": "ZEN-toy",
+      "params": {
+        "n": 32,
+        "q": 769,
+        "secret": "U{-1,0,1}",
+        "compression": "none"
+      },
+      "trials": 200,
+      "invertible": 96,
+      "decrypt_ok": 96,
+      "decrypt_fail": 0,
+      "empirical_coeff_var": 28.5830078125,
+      "model_coeff_var": 28.444444444444443,
+      "second_moment_ratio": 1.0048713684082031,
+      "stress_secret": "U{-8,...,8}",
+      "stress_ok": 21,
+      "stress_fail": 71,
+      "sufficient_condition_violations": 22
+    }
+  ]
+}

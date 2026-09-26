@@ -1,0 +1,67 @@
+{
+  "toy": {
+    "params": {
+      "N": 64,
+      "k": 2,
+      "q": 769,
+      "eta": 4,
+      "db": 8,
+      "du": 8,
+      "dv": 5,
+      "lam": 32,
+      "Db": 4,
+      "Du": 4,
+      "Dv": 32
+    },
+    "keys": 40,
+    "encryptions": 20000,
+    "decrypt_failures": 3,
+    "predicate_failures": 3,
+    "predicate_disagreements": 0,
+    "empirical_failure_log2": -12.702749878828293,
+    "empirical_var": 1887.4832765625,
+    "model_var": 1793.9999999999998,
+    "second_moment_ratio": 1.052108849811873,
+    "exact_log2": -11.756,
+    "emp_std": 43.44514079394001,
+    "emp_max_abs": 213.0
+  },
+  "full_128": {
+    "name": "Cheetah128",
+    "trials": 800,
+    "decrypt_failures": 0,
+    "emp_std": 217.00941037629445,
+    "model_std": 216.5975530794381,
+    "emp_max_abs": 843.0,
+    "emp_tail_log2": {
+      "800": -14.059,
+      "1000": null,
+      "1200": null,
+      "1920": null
+    },
+    "exact_coeff_tail_log2": {
+      "800": -14.162,
+      "1000": -22.175,
+      "1200": -32.259
+    }
+  },
+  "full_256": {
+    "name": "Cheetah256",
+    "trials": 1200,
+    "decrypt_failures": 0,
+    "emp_std": 245.83404090500028,
+    "model_std": 243.70884267912808,
+    "emp_max_abs": 988.0,
+    "emp_tail_log2": {
+      "800": -10.761,
+      "1000": null,
+      "1200": null,
+      "1920": null
+    },
+    "exact_coeff_tail_log2": {
+      "800": -10.628,
+      "1000": -16.2,
+      "1200": -23.133
+    }
+  }
+}

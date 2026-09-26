@@ -24,10 +24,11 @@
 \newcommand{\R}{\mathcal{R}}
 \newcommand{\dfr}{\delta}
 \newcommand{\CBD}{\mathcal{B}}
+\newcommand{\Dm}{\Delta m}
 
-\title{Correlated Decryption Errors in DTRU:\\
-Revisiting Failure Rates and Failure Boosting\\
-for Lattice KEMs with Repetition-Coded Blocks}
+\title{Decryption Failures in NGCC Lattice KEMs:\\
+Correlated Blocks, Omitted Compression Noise,\\
+and Failure Boosting under a Query Cap}
 
 \author{%
 Yuyang Xiao \and Long Chen \and Zhenfeng Zhang\\
@@ -41,31 +42,45 @@ Beijing, China\\
 \maketitle
 
 \begin{abstract}
-DTRU is an NTRU-based key encapsulation mechanism submitted to the Chinese
-NGCC post-quantum competition. Its designers bound the decryption failure
-rate (DFR) of every parameter set by modelling the 16 error coefficients of
-each DoubleE$_8$ decoding block as independent Gaussians and using the
-inscribed ball of the code's Voronoi cell as a sufficient decoding
-condition. We show that both steps fail for the tricyclotomic ring
-$\Z_q[x]/(x^n-x^{n/2}+1)$ and for the LPPNF ring $\Z_q[x]/(x^n-x-1)$ used by
-six of the seven parameter sets. Ring multiplication couples coefficients
-$i$ and $i+n/2$, the repetition code forces $w_i=w_{i+n/2}$, and each
-decoding block consists of exactly eight such pairs, so the block covariance
-has eight large and eight small eigenvalues. Replacing the ball by the exact
-maximum-likelihood failure region of Algorithm~2 and the independence
-assumption by the conditional block covariance, we estimate the true DFR of
-DTRU-648, -768, -1024, -Prime, -1536 and -2048 to lie between $2^{-85}$ and
-$2^{-123}$, against claimed values of $2^{-147}$ to $2^{-204}$. The model is
-validated against the real decoder on scaled-down instances of all three
-rings to within one bit at the median. In the failure-boosting cost model
-of D'Anvers et al., one decryption failure of DTRU-648 costs about
-$2^{85}$ decapsulations, far below the claimed 128-bit level; when the
-decapsulation oracle is capped at $2^{64}$ queries, an offline
-precomputation of $2^{22}$--$2^{26}$ encapsulations suffices for DTRU-648,
--768 and -Prime. DTRU-Light, defined over $x^n+1$, has no such pairing and
-its DFR stays at the claimed order. No attack we describe is practical; the
-results invalidate the stated security levels of DTRU in the DFR metric and
-the methodology used to compute them.
+The Chinese NGCC post-quantum competition received a family of lattice KEMs
+whose decryption failure rates (DFR) are certified by their designers with
+models that differ in detail. We recompute the failure probability of the
+first-round lattice KEMs whose claimed DFR, or a simple recomputation of it,
+lies near or below the nominal level, and we price the offline search for
+weak ciphertexts under a cap of $2^{64}$ or $2^{80}$ decapsulation queries.
+Three distinct mechanisms turn out to be responsible.
+(i)~\emph{Correlated decoding blocks.} DTRU decodes 16-coefficient
+DoubleE$_8$ blocks; in the tricyclotomic ring $\Z_q[x]/(x^n-x^{n/2}+1)$ and
+the LPPNF ring the two octets of a block are ring-paired and the repetition
+code places the same bit on both. The exact maximum-likelihood failure region
+with the conditional block covariance raises the DFR of six of the seven sets
+by $50$--$110$ bits; one failure costs $2^{85}$--$2^{111}$ decapsulations
+against nominal levels of $128$--$512$, and for DTRU-648, -768 and -Prime it
+fits into $2^{64}$ queries after $2^{22}$--$2^{26}$ offline encapsulations.
+(ii)~\emph{Omitted compression noise.} Cheetah compresses its public key and
+both ciphertext components; Section~2.2 of the specification drops the
+public-key term $\langle e_b,r\rangle$ and subtracts the worst case of the
+$v$-compression error from the threshold. Evaluated by exponentially tilted
+one-dimensional FFTs, and validated on a scaled-down instance of
+Algorithms~15--17 and on full-size noise, the DFR of Cheetah128 and
+Cheetah256 is $2^{-79.1}$ and $2^{-51.8}$ instead of the claimed $2^{-129}$
+and $2^{-176}$: a random ciphertext fails within $2^{80}$ queries at both
+levels.
+(iii)~\emph{Bounded noise in two-dimensional codes.} Rudraksh2 and Scabbard
+decode pairs of coefficients with B2-Minal codes. The pair
+$(\Delta m_0,\Delta m_{n/2})$ is a sum of independent two-dimensional atoms;
+we evaluate its tail by one-dimensional projections onto the Voronoi radii
+of the real decoder. The exact DFR is $2^{-103.9}$ for Rudraksh2-128-I
+(claimed $2^{-100}$) and $2^{-102.1}$ for Scabbard-128 (claimed $2^{-99}$).
+Under a $2^{80}$ query cap Rudraksh2-128-I reaches a first failure after
+$2^{32}$ offline encapsulations, for a classical total of $2^{112}$ (below
+the level 128; the quantum total $2^{96}$ exceeds the 80-bit quantum
+target). Scabbard-128 without a cap costs $2^{102}$, below 128, which is
+the comparison the specification itself makes against $2^{64}\times 2^{-99}$;
+with the cap the offline tilt costs $2^{108}$ and the classical total is
+$2^{188}$. No attack we describe recovers a key; the results invalidate
+stated security levels in the DFR metric and the methods used to compute
+them.
 \end{abstract}
 
 \section{Introduction}
@@ -92,62 +107,117 @@ decision as independent. For schemes over $\Z_q[x]/(x^n+1)$ with one bit per
 coefficient this is well studied~\cite{DVV19,DB22,FWZ22}. Error-correcting
 codes change the picture: a decoding decision now depends on a block of
 coefficients, and any correlation inside the block changes the tail.
+Compression changes it too: the rounding error of every compressed object
+reappears in the decryption noise, and its bounded support makes Gaussian
+models inaccurate at the operating point.
+
+\paragraph{Scope.}
+We went through the lattice KEMs of the first NGCC round and selected those
+whose claimed DFR, or a simple recomputation of it, is below the nominal
+security level. For each we ask two questions: what is the failure
+probability of an honest ciphertext under the real decoder and the real
+noise, and how much offline work does an adversary need so that a first
+failure appears within $2^{64}$ or $2^{80}$ decapsulation queries. Two
+groups emerge. Class~I comprises those sets for which $1/\E[\dfr]$, or the
+classical total under a $2^{80}$ query cap, lies below the nominal level:
+the six DTRU sets over the tricyclotomic and LPPNF rings, and Cheetah128
+and Cheetah256. Class~II sits at the line: DTRU-Light, Rudraksh2-128-I
+(classical $2^{112}$ under the cap, quantum $2^{96}$ above the 80-bit
+quantum target) and Scabbard-128 (uncapped $2^{102}$ below 128; capped
+total $2^{188}$). Schemes whose weakest legal ciphertext
+cannot reach a conditional failure probability of $2^{-80}$, or whose offline
+search cost exceeds the level by hundreds of bits (FLIT, NTRE, BW-KEM, ZEN,
+NEV, the higher Cheetah, Rudraksh2 and Scabbard sets), are outside this
+paper.
 
 \paragraph{DTRU.}
-DTRU~\cite{DTRU} is an NTRU-based KEM submitted to the NGCC competition. Its
-main parameter sets live in the tricyclotomic ring
-$\R_q=\Z_q[x]/(x^n-x^{n/2}+1)$ with $q=3457$, a variant DTRU-Prime uses the
-LPPNF ring $\Z_q[x]/(x^{1087}-x-1)$, and a lightweight set DTRU-Light uses
-$\Z_{769}[x]/(x^{512}+1)$. Messages are encoded with DoubleE$_8$: four bits
-become an $[8,4,4]$ extended Hamming codeword, which is then repeated by
-multiplication with $(1+x^{n/2})$; the decoder works on 16-coefficient
-blocks consisting of the $i$-th octet and the octet at distance $n/2$. The
-specification bounds the DFR by (i) the inscribed ball
+DTRU~\cite{DTRU} is an NTRU-based KEM. Its main parameter sets live in the
+tricyclotomic ring $\R_q=\Z_q[x]/(x^n-x^{n/2}+1)$ with $q=3457$, a variant
+DTRU-Prime uses the LPPNF ring $\Z_q[x]/(x^{1087}-x-1)$, and a lightweight
+set DTRU-Light uses $\Z_{769}[x]/(x^{512}+1)$. Messages are encoded with
+DoubleE$_8$: four bits become an $[8,4,4]$ extended Hamming codeword, which
+is then repeated by multiplication with $(1+x^{n/2})$; the decoder works on
+16-coefficient blocks consisting of the $i$-th octet and the octet at
+distance $n/2$. The specification bounds the DFR by (i) the inscribed ball
 $\|\Err^{(i)}\|_2^2<(q-1)^2/2$ of the code and (ii) modelling
 $\|\Err^{(i)}\|^2$ as $\sigma^2\chi^2(16)$, and reports failure rates from
 $2^{-143.9}$ (Light) to $2^{-204.1}$ (DTRU-2048).
 
+\paragraph{Cheetah.}
+Cheetah~\cite{Cheetah} is a Module-LWE KEM over $\Z_{7681}[x]/(x^{640}+1)$
+with rank $k\in\{1,2,3,4\}$, centred binomial noise $\CBD_\eta$, one message
+bit per coefficient, and compression of the public key ($d_b$ bits), of the
+first ciphertext component ($d_u$) and of the second ($d_v$). Its
+specification bounds the DFR by a Gaussian model of
+$e\cdot r+s\cdot e_1-s\cdot e''$ against a threshold from which the maximum of
+the $v$-compression error has been subtracted, and reports $2^{-129}$,
+$2^{-176}$, $2^{-189}$, $2^{-243}$.
+
+\paragraph{Rudraksh2 and Scabbard.}
+Rudraksh2~\cite{Rudraksh2} (Module-LWE with Kyber-style compression) and
+MORNING-Scabbard~\cite{Scabbard} (Module-LWR with power-of-two moduli) both
+use small rings ($n=64$ at the 128-bit level) and encode four message bits
+into the coefficient pair $(i,\,i+n/2)$ with a two-dimensional B2-Minal
+code~\cite{Minal}. Their DFR computations evaluate the joint distribution
+of the pair by FFT and report $2^{-100}$ and $2^{-99}$ at the 128-bit
+level.
+
 \paragraph{Contributions.}
 \begin{enumerate}
-\item \textbf{The failure event.} We derive the exact failure region of
-Algorithm~2. Because the two symbol values $0$ and $(q+1)/2$ are antipodal
+\item \textbf{DTRU: the failure event.} We derive the exact failure region
+of Algorithm~2. Because the two symbol values $0$ and $(q+1)/2$ are antipodal
 in $\Z_q$, block $i$ is decoded incorrectly iff for some codeword difference
 with support $D$ ($|D|\in\{8,16\}$)
 $\sum_{j\in D}|\Err_j|\ge |D|(q+1)/4$. This is a union of half-spaces
 tangent to the inscribed ball, so the ball is a strict over-approximation.
-\item \textbf{The correlation.} In $x^n-x^{n/2}+1$ every cross term of a
-ring product pairs indices at distance exactly $n/2$, and the repetition
-code makes $w_i=w_{i+n/2}$. Each decoding block is made of eight such pairs.
-The conditional covariance of a block, given the ciphertext, has eight
-eigenvalues around $0.3\times$ and eight around $1.6$--$2.1\times$ the
+\item \textbf{DTRU: the correlation.} In $x^n-x^{n/2}+1$ every cross term
+of a ring product pairs indices at distance exactly $n/2$, and the
+repetition code makes $w_i=w_{i+n/2}$. Each decoding block is made of eight
+such pairs. The conditional covariance of a block, given the ciphertext, has
+eight eigenvalues around $0.3\times$ and eight around $1.6$--$2.1\times$ the
 marginal variance. The failing directions are the large ones.
-\item \textbf{A validated estimator.} We compute the Gaussian half-space
-union per block given the ciphertext randomness, correct the dominant terms
-with the exact centred-binomial cumulant generating function
-(Lugannani--Rice), and validate against the real key generation, encryption
-and decoder on scaled-down instances of all three rings: medians agree to
-within $0.3$--$0.8$ bits, second moments to $1$--$3\%$.
-\item \textbf{Corrected DFRs.} For 200 honest ciphertexts per set, the
-median failure probabilities of DTRU-648/768/1024/Prime/1536/2048 are
-$2^{-97},2^{-112},2^{-118},2^{-115},2^{-111},2^{-123}$ and the averages
-$2^{-85},2^{-98},2^{-105},2^{-96},2^{-101},2^{-111}$; the claimed values are
-$2^{-147}$ to $2^{-204}$. Re-running the specification's own method with our
-variances reproduces their numbers to within $\pm 8$ bits, so the gap is
-the model, not the variance. DTRU-Light has no pairing and its DFR is of
-the claimed order.
-\item \textbf{Failure boosting costs.} Classical work for a first failure
-cannot go below $1/\E[\dfr]$; we obtain $2^{85}$--$2^{111}$ for the six
-affected sets against nominal levels $128$--$512$. Separating the offline
-precomputation from oracle queries as in~\cite{DVV19}, DTRU-648 already
-contains honest ciphertexts with failure probability above $2^{-80}$ among
-200 samples, and a $2^{64}$ query cap is met with $2^{22}$--$2^{26}$
-offline encapsulations for DTRU-648, -768 and -Prime.
-\item \textbf{After the first failure.} A failure yields a known linear
-form in the secret with about $900$ effective coordinates out of $4096$
-(DTRU-2048); failure directions of independent ciphertexts have cosine
-$0.19$--$0.27$, so a second failure costs about $2^{-72}$--$2^{-86}$ once
-the first is known, consistent with~\cite{DRV20}. Full key recovery is not
-executed.
+\item \textbf{DTRU: a validated estimator and corrected DFRs.} We compute
+the Gaussian half-space union per block given the ciphertext randomness,
+correct the dominant terms with the exact centred-binomial cumulant
+generating function, and validate against the real scheme on scaled-down
+instances of all three rings. For 200 honest ciphertexts per set the
+average failure probabilities of DTRU-648/768/1024/Prime/1536/2048 are
+$2^{-85},2^{-98},2^{-105},2^{-96},2^{-101},2^{-111}$ against claimed values
+of $2^{-147}$ to $2^{-204}$. One failure costs $2^{85}$--$2^{111}$
+decapsulations; under a $2^{64}$ query cap the offline part is
+$2^{22}$--$2^{26}$ encapsulations for DTRU-648, -768 and -Prime.
+\item \textbf{Cheetah: the noise expression and its exact tail.} Expanding
+Algorithms~15--17 of the specification, the decryption noise contains the
+public-key compression term $\langle e_b,r\rangle$, absent from the
+specification's bound, and the $v$-compression error is a known,
+ciphertext-dependent shift of half-width $2^{\lceil\log_2 q\rceil-d_v-1}$
+rather than a worst case to subtract. We evaluate the tail exactly by
+exponential tilting and a one-dimensional FFT, validate the model on a
+scaled-down instance of the real algorithm (3 failures in $20000$
+encryptions, $2^{-12.70}$, against the exact $2^{-11.76}$) and on full-size
+noise (standard deviation to $1\%$, the $|E|\ge800$ tail to $0.2$ bits).
+The DFR of Cheetah128/256/384/512 is $2^{-79.1}$, $2^{-51.8}$,
+$2^{-116.1}$, $2^{-201.0}$. Evaluating the specification's own formula as
+written gives $2^{-163}$, $2^{-126}$, $2^{-149}$, $2^{-336}$.
+\item \textbf{Minal-coded schemes: the pair distribution.} Over $x^n+1$
+the noise pair $(\Dm_0,\Dm_{n/2})$ is a sum of $\ell n/2$ independent
+two-dimensional atoms $(xy+x'y',\,xy'-x'y)$. We evaluate its tail by
+one-dimensional projections onto the Voronoi radii of the real two-phase
+Minal decoder (phase~2 uses the threshold $q/4$), with a Mills/Rayleigh
+correction from the half-space to the radial tail, and validate on
+scaled-down instances of both schemes. The exact DFR is $2^{-103.9}$ for
+Rudraksh2-128-I and $2^{-102.1}$ for Scabbard-128, a few bits below the
+claimed $2^{-100}$ and $2^{-99}$. The remaining Rudraksh2 and Scabbard
+sets claim DFRs well below $2^{-128}$ and are outside this paper.
+\item \textbf{Failure boosting with a query cap.} We separate the two
+levers an encapsulator has: the squared norm of the ciphertext secret,
+whose cost is a large deviation of $\ell n$ or $kN$ binomial squares, and the
+ciphertext-known shift of each decoding position, which is free to inspect.
+For every set we report the cheapest way to bring a first failure within
+$2^{64}$ and $2^{80}$ decapsulation queries. DTRU-648 and Cheetah128/256
+need no squared-norm tilt at $2^{80}$; Rudraksh2-128-I needs a tilt of
+$S=1.34$ costing $2^{32}$ encapsulations and lands at a classical total of
+$2^{112}$.
 \end{enumerate}
 
 Every number in this paper is reproducible from a few hundred lines of
@@ -161,9 +231,73 @@ its coefficients and $M_a\in\Z^{n\times n}$ for the matrix of
 multiplication by $a$, whose $j$-th column is $a\cdot x^j$; then $M_a b=ab$.
 For an index set $I$ of size 16 we write $M_a[I]$ for the $16\times n$
 submatrix of rows $I$. $\CBD_\eta$ is the centred binomial distribution
-with variance $\eta/2$. $Q(z)=\Pr[N(0,1)\ge z]$.
+with variance $\eta/2$. $Q(z)=\Pr[N(0,1)\ge z]$. $\bmod^{\pm}q$ denotes
+the representative in $(-q/2,q/2]$.
 
-\subsection{DTRU}
+\subsection{Failure boosting and the query cap}
+\label{sec:fb}
+Following~\cite{DVV19,DB22}, let $p(c)$ be the failure probability of an
+honestly generated ciphertext $c$ over the secret key, and let
+$\dfr=\E_c[p(c)]$. The adversary fixes a threshold $f_t$, generates
+ciphertexts offline (this is legal: the randomness is $H(\ID(pk),m)$ or
+$G(m\|H(pk))$ for a chosen $m$), and keeps those with $p(c)>f_t$. With
+$\alpha=\Pr_c[p(c)>f_t]$ and $\beta=\E[p(c)\mid p(c)>f_t]$, the expected
+cost of one failure is $\alpha^{-1}$ encapsulations offline and
+$\beta^{-1}$ decapsulation queries, i.e.\ total classical work
+$(\alpha\beta)^{-1}$; Grover search reduces the offline part to
+$\alpha^{-1/2}$. Since
+\begin{equation}
+\label{eq:identity}
+\alpha\beta=\E\bigl[p(c)\,\mathbf 1_{p(c)>f_t}\bigr]\le\E[p(c)]=\dfr,
+\end{equation}
+classical total work never drops below $1/\dfr$; boosting trades oracle
+queries for offline work. NIST caps the decapsulation oracle at $2^{64}$
+queries; several NGCC submissions argue with $2^{80}$. We report both: $f_t$
+is chosen so that $\beta^{-1}$ equals the cap, and the total is
+$\alpha^{-1}\cdot 2^{\mathrm{cap}}$. When $\dfr$ itself exceeds $2^{-\mathrm{cap}}$,
+random ciphertexts suffice and the total is $1/\dfr$. Because the public
+key enters the hash, weak ciphertexts do not transfer between keys and the
+multi-target improvements of~\cite{DB22} do not apply.
+
+\paragraph{What the encapsulator knows.}
+$p(c)$ conditions on everything the encapsulator computes: the ciphertext
+secret vectors and every compression error of the ciphertext. The decryption
+noise at a decoding position therefore splits into a part that depends on
+the unknown key, whose distribution is set by the ciphertext, and a known
+shift $d$ (for instance $e_2$ plus the $v$-compression error in Cheetah, or
+$e''$ plus the $v$-compression error in Rudraksh2). Two levers follow.
+First, the squared norm of the ciphertext secret scales the variance of the
+unknown part; a coefficient distribution with mean square $S$ times its
+honest value has probability $2^{-\mathrm{cost}(S)}$ given by the large
+deviation of $\ell n$ (or $kN$) independent squares, computed from the exact
+cumulant generating function. Its ceiling $S_{\max}$ is the largest square
+over the honest mean square ($4$ for $\CBD_2$, $10$ for $\CBD_5$). Second,
+the shift $d$ at each of the $n_{\mathrm{pos}}$ decoding positions is
+inspected at no cost; selecting a position whose shift points towards the
+nearest failure boundary raises that position's failure probability, while
+the other $n_{\mathrm{pos}}-1$ positions keep their average. We optimise the
+two levers jointly.
+
+\subsection{Exact tails by exponential tilting}
+\label{sec:tilt}
+Every noise term in this paper is a sum of independent, bounded, exactly
+enumerable atoms (products of centred binomials, of a centred binomial and a
+rounding error, and so on). For a one-dimensional tail we tilt each atom
+by $e^{\theta x}/K(\theta)$ so that the tilted mean lies at the threshold,
+convolve the tilted atoms on a grid by FFT in double precision, and undo
+the tilt:
+$\Pr[X=z]=K(\theta)^N e^{-\theta z}\,p_\theta^{*N}(z)$.
+The Radon--Nikodym factor is applied only in a window around the tilted
+mode, so FFT floor noise is not reweighted into the far tail. For the
+two-dimensional Minal cell we project the same atoms onto each Voronoi
+radius of the real decoder and apply a Mills/Rayleigh factor
+$z\sqrt{2\pi}$ that converts the half-space tail into a radial tail; the
+construction is exact for an isotropic law and a circular cell, and the
+scaled-down instances of Section~\ref{sec:pair} check the residual.
+
+\part{DTRU}
+
+\section{The scheme}
 \label{sec:dtru}
 
 Three rings are used:
@@ -226,8 +360,7 @@ Prime & lppnf & 2 & 1087 & 2017 & $2^{10}$ & $(2,1)$ & $(2,1)$ & $-180.72$ & 256
 \label{tab:params}
 \end{table}
 
-\subsection{The specification's DFR bound}
-\label{sec:specdfr}
+\paragraph{The specification's DFR bound.}
 Section~2.3 of~\cite{DTRU} argues that block $i$ decodes correctly whenever
 \begin{equation}
 \label{eq:ball}
@@ -240,28 +373,6 @@ $n/16$ blocks:
 $\dfr\le\frac{n}{16}\Pr[\chi^2(16)\ge T/\sigma^2]$. Section~2.4 adds that
 adversarial choice of the message can raise the failure rate by at most
 about $2^{20}$.
-
-\subsection{Failure boosting}
-\label{sec:fb}
-Following~\cite{DVV19,DB22}, let $p(c)$ be the failure probability of an
-honestly generated ciphertext $c$ over the secret key, and let
-$\dfr=\E_c[p(c)]$. The adversary fixes a threshold $f_t$, generates
-ciphertexts offline (this is legal: the randomness is $H(\ID(pk),m)$ for
-a chosen $m$), and keeps those with $p(c)>f_t$. With
-$\alpha=\Pr_c[p(c)>f_t]$ and $\beta=\E[p(c)\mid p(c)>f_t]$, the expected
-cost of one failure is $\alpha^{-1}$ encapsulations offline and
-$\beta^{-1}$ decapsulation queries, i.e.\ total classical work
-$(\alpha\beta)^{-1}$; Grover search reduces the offline part to
-$\alpha^{-1/2}$. Since
-\begin{equation}
-\label{eq:identity}
-\alpha\beta=\E\bigl[p(c)\,\mathbf 1_{p(c)>f_t}\bigr]\le\E[p(c)]=\dfr,
-\end{equation}
-classical total work never drops below $1/\dfr$; boosting trades oracle
-queries for offline work. When the oracle is capped at $2^{64}$ queries
-(the NIST model), $f_t$ is chosen so that $\beta^{-1}=2^{64}$. Because
-$\ID(pk)$ enters the hash, weak ciphertexts do not transfer between keys
-and the multi-target improvements of~\cite{DB22} do not apply.
 
 \section{The failure region of Algorithm~2}
 \label{sec:region}
@@ -533,25 +644,25 @@ top eigenvalue on the ball statistic), not those with a large norm.
 \label{sec:cap}
 Following~\cite{DVV19}, the offline and online costs separate. We fit
 $\log_2 p$ by a normal law and ask for the threshold $f_t$ at which the
-conditional failure probability is $2^{-80}$, and then for the threshold at
-which $\beta^{-1}=2^{64}$.
+conditional failure probability is $2^{-80}$ (the oracle then stays within
+a $2^{80}$ cap), and then for the threshold at which $\beta^{-1}=2^{64}$.
 
 \begin{table}[t]
 \centering\small
 \resizebox{\textwidth}{!}{%
-\begin{tabular}{lrrrrrrr}
+\begin{tabular}{lrrrrrrrr}
 \toprule
-& \multicolumn{3}{c}{$f_t=2^{-80}$} & \multicolumn{4}{c}{oracle capped at $2^{64}$}\\
-\cmidrule(lr){2-4}\cmidrule(lr){5-8}
-Set & \#$\{p>2^{-80}\}$/200 & precomp & oracle & precomp & oracle & classical & quantum\\
+& \multicolumn{4}{c}{$f_t=2^{-80}$ (oracle within $2^{80}$)} & \multicolumn{4}{c}{oracle capped at $2^{64}$}\\
+\cmidrule(lr){2-5}\cmidrule(lr){6-9}
+Set & \#$\{p>2^{-80}\}$/200 & precomp & oracle & classical & precomp & oracle & classical & quantum\\
 \midrule
-648 & \textbf{2} & 8.3 & 75.4 & 24.1 & 62.2 & 86.3 & 74.2\\
-768 & 0 & 13.0 & 73.0 & 25.9 & 60.6 & 86.6 & 73.6\\
-Prime & 0 & 12.1 & 67.7 & 22.3 & 57.5 & 79.8 & 68.7\\
-1024 & 0 & 21.8 & 77.1 & 41.1 & 62.4 & 103.4 & 82.9\\
-1536 & 0 & 17.6 & 76.9 & 36.6 & 62.4 & 99.0 & 80.7\\
-2048 & 0 & 37.4 & 78.7 & 67.3 & 63.1 & 130.4 & 96.8\\
-Light & 0 & 46.8 & 77.7 & 67.5 & 62.3 & 129.8 & 96.1\\
+648 & \textbf{2} & 8.3 & 75.4 & 83.7 & 24.1 & 62.2 & 86.3 & 74.2\\
+768 & 0 & 13.0 & 73.0 & 86.0 & 25.9 & 60.6 & 86.6 & 73.6\\
+Prime & 0 & 12.1 & 67.7 & 79.8 & 22.3 & 57.5 & 79.8 & 68.7\\
+1024 & 0 & 21.8 & 77.1 & 98.9 & 41.1 & 62.4 & 103.4 & 82.9\\
+1536 & 0 & 17.6 & 76.9 & 94.5 & 36.6 & 62.4 & 99.0 & 80.7\\
+2048 & 0 & 37.4 & 78.7 & 116.1 & 67.3 & 63.1 & 130.4 & 96.8\\
+Light & 0 & 46.8 & 77.7 & 124.5 & 67.5 & 62.3 & 129.8 & 96.1\\
 \bottomrule
 \end{tabular}}
 \caption{Offline precomputation ($\log_2\alpha^{-1}$ encapsulations) and
@@ -598,64 +709,450 @@ secret (random directions: $0.07$), with only $z\approx3.5$ per failure.
 At the real parameters each failure carries $z\approx13$. We did not run
 the final lattice-reduction step and do not claim a completed key recovery.
 
+\part{Cheetah}
+
+\section{The scheme and its decryption noise}
+\label{sec:cheetah}
+
+Cheetah works in $\R_q=\Z_q[x]/(x^N+1)$ with $q=7681$, $N=640$ and module
+rank $k$. With $d_q=\lceil\log_2 q\rceil=13$, compression to $d$ bits is
+$\mathrm{Compress}(x,D)=\lfloor x/D\rfloor$ and
+$\mathrm{Decompress}(y,D)=\min(yD+D/2,\,q-1)$ for $D=2^{d_q-d}$; the error
+$x'-x$ takes the values $D/2-(x\bmod D)$, so it is uniform on
+$\{-D/2+1,\dots,D/2\}$ with mean $1/2$. Key generation samples
+$s,e\leftarrow\CBD_\eta^{k\times N}$ and publishes
+$\tilde b=\mathrm{Compress}(As+e,\,2^{d_q-d_b})$. Encryption decompresses
+$b=As+e+e_b$, samples $r,e_1\leftarrow\CBD_\eta^{k\times N}$,
+$e_2\leftarrow\CBD_\eta^{N}$, and outputs
+$u=\mathrm{Compress}(r^\top A+e_1,\,2^{d_q-d_u})$ and
+$v=\mathrm{Compress}\bigl(\mathrm{Truncate}(r^\top b+e_2,\lambda)+\Delta m,\,2^{d_q-d_v}\bigr)$
+with $\Delta=2^{-1}\bmod q$; only the first $\lambda$ coefficients of $v$
+are sent. Decryption computes
+$m'=\bigl(2\,(v'-\mathrm{Truncate}(u'^\top s,\lambda))\bmod^{\pm}q\bigr)\bmod 2$.
+Writing $\Delta u$, $\Delta v$ for the two ciphertext compression errors,
+\begin{equation}
+\label{eq:cheetahE}
+v'-u'^\top s=\Delta m+E,\qquad
+E=\langle e,r\rangle+\langle e_b,r\rangle-\langle s,e_1\rangle-\langle s,\Delta u\rangle+e_2+\Delta v,
+\end{equation}
+and since $2\Delta\equiv1$, coefficient $j$ decodes correctly iff
+$|2E_j+m_j|<q/2$, i.e.\ (up to one unit) $|E_j|<q/4$.
+
+\paragraph{The specification's bound.}
+Section~2.2 of~\cite{Cheetah} writes the noise as
+$e\cdot r+e_2+e'-s\cdot e_1-s\cdot e''$: the public-key term
+$\langle e_b,r\rangle$ is absent, although the encryptor multiplies $r$ by the
+decompressed $b$ (Algorithm~16, lines 4--5 and 15). It then subtracts the
+maximum $2^{d_q-d_v-1}$ of $e'=\Delta v$ and the bound $\eta$ on $e''=\Delta u$
+from the threshold, models the remaining terms as a Gaussian of standard
+deviation $\sqrt{3n\sigma^2}$, and reports Table~\ref{tab:cheetah}. For
+Cheetah128 and Cheetah256 ($d_b=10$, $D_b=8$) the omitted term has second
+moment $kN\cdot 5.5\cdot\eta/2$, more than twice that of
+$\langle e,r\rangle$ itself;
+for $d_v=4$ the subtracted maximum is $256$ out of a threshold of $1920$,
+while the actual $\Delta v$ is a known shift that is as often favourable as
+not.
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+Set & $k$ & $\lambda$ & $\eta$ & $(d_b,d_u,d_v)$ & claimed $\log_2\dfr$ & primal C/Q & Core-SVP C/Q\\
+\midrule
+Cheetah128 & 1 & 128 & 5 & $(10,10,4)$ & $-129$ & 159 / 139 & 148.3 / 134.6\\
+Cheetah256 & 2 & 256 & 4 & $(10,10,4)$ & $-176$ & 307 / 276 & 325.9 / 295.7\\
+Cheetah384 & 3 & 384 & 3 & $(11,11,4)$ & $-189$ & 426 / 382 & 499.0 / 452.9\\
+Cheetah512 & 4 & 512 & 2 & $(11,11,8)$ & $-243$ & 541 / 497 & 511.9 / 464.6\\
+\bottomrule
+\end{tabular}
+\caption{Cheetah parameter sets (specification Table~2) with the
+designers' primal-attack estimates (Table~4) and the Core-SVP values of the
+lattice estimator ($0.292\beta$ / $0.265\beta$).}
+\label{tab:cheetah}
+\end{table}
+
+\section{Exact tail and validation}
+\label{sec:cheetahexact}
+
+\paragraph{Unknown part and known shift.}
+From the encapsulator's point of view $E_j$ splits into the shift
+$d_j=e_{2,j}+\Delta v_j$, known exactly, and the unknown part
+$Z_j=\langle e+e_b,\,r\rangle_j-\langle s,\,e_1+\Delta u\rangle_j$, a sum of
+$kN$ atoms $(e+e_b)_a r_{b}$ and $kN$ atoms $s_a(e_1+\Delta u)_{b}$, each
+enumerated exactly (the atom pmfs have at most a few hundred points). The
+second moment of the first atom is $\E[(e+e_b)^2]\,\E[r^2]$, which includes the
+mean $1/2$ of $e_b$. We compute the two-sided tail $\Pr[|E|\ge q/4]$ by the
+tilted FFT of Section~\ref{sec:tilt} on a grid of at most $2^{16}$ points,
+folding $e_2$ and $\Delta v$ into the same convolution; then
+$\dfr=1-(1-p)^{\lambda}$ with $p$ that coefficient tail. A squared-norm
+tilt of $r$ and $e_1$ rebuilds the ciphertext-side atoms so that
+$\E[r_j^2]=S_r\cdot\eta/2$ and likewise for $e_1$, and the offline cost
+is the large-deviation probability of those squares.
+
+\paragraph{Scaled-down instance.}
+We implemented Algorithms~15--17 literally (negacyclic multiplication,
+$\mathrm{Compress}(x,D)=\lfloor x/D\rfloor$,
+$\mathrm{Decompress}=\min(yD+D/2,\,q-1)$, the $\bmod 2$ decoder) at
+$N=64$, $k=2$, $q=769$, $\eta=4$, $(d_b,d_u,d_v)=(8,8,5)$, $\lambda=32$, on
+40 keys with 500 encryptions each. The decoder failed on $3$ of $20000$
+ciphertexts ($2^{-12.70}$); the exact computation above gives $2^{-11.76}$.
+The predicate $|E_j|\ge q/4$ agreed with the decoder on every ciphertext.
+The empirical second moment of $E$ is $1.052$ of the sum of the six exact
+terms.
+
+\paragraph{Full-size noise.}
+At the real parameters we sampled $E$ on the transmitted positions of
+Cheetah128 (800 encryptions) and Cheetah256 (1200 encryptions). The
+empirical standard deviation is $217.0$ against the model $216.6$ for
+Cheetah128 and $245.8$ against $243.7$ for Cheetah256. The empirical
+frequency of $|E|\ge800$ is $2^{-14.06}$ against the exact $2^{-14.16}$
+(Cheetah128) and $2^{-10.76}$ against $2^{-10.63}$ (Cheetah256). No
+coefficient reached $1000$ in these trials (the exact model puts that
+event at $2^{-22.2}$ and $2^{-16.2}$). No decryption failure occurred, as
+expected at $2^{-79}$ and $2^{-52}$; the value at $q/4=1920.25$ is the
+same tilted FFT continued to the threshold.
+
+\section{Results for Cheetah}
+\label{sec:cheetahresults}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+& & & & & & \multicolumn{2}{c}{$2^{80}$ queries} & \multicolumn{2}{c}{$2^{64}$ queries}\\
+\cmidrule(lr){7-8}\cmidrule(lr){9-10}
+Set & level & claimed & \S2.2 formula & exact $\log_2\dfr$ & primal / Core-SVP & $S$, pre & C / Q & $S$, pre & C / Q\\
+\midrule
+Cheetah128 & 128 & $-129$ & $-162.8$ & $\mathbf{-79.1}$ & 159 / 148.3 & 1, 0 & $\mathbf{79.1}$ / 79.1 & 1.47, 49.4 & 113.4 / 88.7\\
+Cheetah256 & 256 & $-176$ & $-125.5$ & $\mathbf{-51.8}$ & 307 / 325.9 & 1, 0 & $\mathbf{51.8}$ / 51.8 & 1, 0 & 51.8 / 51.8\\
+Cheetah384 & 384 & $-189$ & $-149.2$ & $-116.1$ & 426 / 499.0 & 1.83, 549 & 629 / 355 & 2.67, 1386 & 1450 / 757\\
+Cheetah512 & 512 & $-243$ & $-335.6$ & $-201.0$ & 541 / 511.9 & 3.5, 6422 & 6502 / 3291 & 4.0, 15360 & 15424 / 7744\\
+\bottomrule
+\end{tabular}}
+\caption{Cheetah: the specification's claimed DFR, the same \S2.2 formula
+evaluated as written, the exact tilted-FFT DFR, the designers' primal
+estimate and the classical Core-SVP value, and the cheapest first failure
+under each query cap. $S$ is the squared-norm tilt of $r$ (and, when
+helpful, $e_1$) and ``pre'' its $\log_2$ offline cost; C / Q are the
+classical and quantum totals.}
+\label{tab:cheetahres}
+\end{table}
+
+Table~\ref{tab:cheetahres} summarises. Cheetah256 fails with probability
+$2^{-51.8}$ on an honest ciphertext; random ciphertexts produce a failure
+after $2^{52}$ decapsulations, below the nominal 256, the designers'
+primal estimate of 307 and the Core-SVP value of $325.9$. Cheetah128 fails
+at $2^{-79.1}$; under a $2^{80}$ cap random ciphertexts suffice ($2^{79}$
+against a level of 128), and under a $2^{64}$ cap a squared-norm tilt of
+$S_r=1.47$ with $2^{49}$ offline encapsulations gives a classical total of
+$2^{113}$ and a quantum total of $2^{89}$. Cheetah384 and Cheetah512 are
+$73$ and $42$ bits above their claims but cannot be brought under either
+cap without an offline search far above the level; without a cap their
+first failure costs $2^{116}$ and $2^{201}$, below the levels 384 and 512
+and below every lattice estimate in Table~\ref{tab:cheetah}. We keep those
+two sets out of the first-class list of Section~\ref{sec:summary} because
+the $2^{80}$ total exceeds the level.
+
+The $v$-compression at $d_v=4$ is the design decision behind the two low
+levels: the known shift has half-width $256$ against a threshold of
+$1920$ and a total noise of standard deviation $217$--$244$, and the
+public-key compression at $d_b=10$ adds a term of the same size as the LWE
+error itself. Cheetah512 uses $d_v=8$ and $d_b=11$ and is affected only by
+the $e_b$ term and the exact (heavier than Gaussian) tail. The
+specification's own formula, evaluated as written, is more conservative
+than the claim for Cheetah128 and Cheetah512 and less conservative for
+Cheetah256 and Cheetah384; neither the claim nor that formula includes
+$\langle e_b,r\rangle$.
+
+\part{Minal-coded schemes: Rudraksh2 and Scabbard}
+
+\section{B2-Minal codes and the failure region}
+\label{sec:minal}
+
+Both schemes encode four bits $m=(m_0,m_1,m_2,m_3)$ into the coefficient
+pair $(i,\,i+n/2)$ of a polynomial in $\Z_q[x]/(x^n+1)$ as
+$c=G_2 m$ with
+\[
+G_2=\begin{pmatrix}\lfloor q/2\rceil&0&\lfloor q/4\rceil&\beta\\
+0&\lfloor q/2\rceil&\beta&\lfloor q/4\rceil\end{pmatrix},
+\]
+where $\beta<q/2$ is a tailoring parameter~\cite{Minal}. Decoding
+(Algorithm~6 of~\cite{Scabbard}, Algorithm~7 of~\cite{Rudraksh2}) first
+reduces the pair modulo $\lfloor q/2\rceil$ and picks $(m_2,m_3)$ by minimum
+centred Euclidean distance among the four points of the pure Minal code
+generated by $[\lfloor q/4\rceil,\beta]$; then $(m_0,m_1)$ are the
+indicators $|\delta_x|\ge q/4$, $|\delta_y|\ge q/4$
+of the centred residual against the chosen point. The correct-decoding
+region of a message is a polygon in $\Z_q^2$. We do not replace it by an
+inscribed ball: the failure radii of the vectorised decoder, averaged over
+the 16 messages, are the thresholds of Section~\ref{sec:pair}.
+
+\paragraph{Noise.}
+For Rudraksh2 (Module-LWE, rank $\ell$, $\CBD_\eta$ secrets, Kyber-style
+rounding compression to $p$ and $t$ bits)
+\[
+\Dm=\langle e,s'\rangle-\langle s,\,e'+\Delta u\rangle+e''+\Delta v,
+\]
+where $s,e$ are the key, $s',e',e''$ the ciphertext secrets and
+$\Delta u,\Delta v$ the compression errors. For Scabbard (Module-LWR, moduli
+$q=2^{\epsilon_q}$, $p=2^{\epsilon_p}$, $t=2^{\epsilon_t}$) the public key
+is $b=\lfloor(A^\top s+h)\rfloor_{\epsilon_q-\epsilon_p}$ and the ciphertext
+$u=\lfloor(As'+h)\rfloor_{\epsilon_q-\epsilon_p}$,
+$v=\bigl(2^{\epsilon_q-\epsilon_p}b^\top s'-\mu\bmod q\bigr)\gg(\epsilon_q-\epsilon_t-2)$,
+and decryption forms
+$m'=2^{\epsilon_q-\epsilon_p}u^\top s-2^{\epsilon_q-\epsilon_t-2}v\bmod q$
+(Algorithms~9--11 of~\cite{Scabbard}). Writing $e_b,e_u$ for the two
+rounding errors (uniform on $\{-2^{d-1}+1,\dots,2^{d-1}\}$ with
+$d=\epsilon_q-\epsilon_p$, thanks to the constant $h$) and $\rho$ for the
+remainder discarded from $v$,
+\[
+m'=\mu+\Dm,\qquad \Dm=\langle e_u,s\rangle-\langle e_b,s'\rangle+\rho .
+\]
+Lines~8 of Algorithms~10 and~11 contain no rounding constant for $v$. We
+model $\rho$ as centred on
+$\{-2^{\epsilon_q-\epsilon_t-3},\dots,2^{\epsilon_q-\epsilon_t-3}-1\}$,
+the law a Saber-style constant would produce and the reading consistent
+with the claimed $2^{-99}$. For Scabbard-128 the half-width is $256$.
+
+\section{Exact joint distribution of a pair}
+\label{sec:pair}
+
+\begin{lemma}
+\label{lem:atom}
+Let $a,b\in\Z[x]/(x^n+1)$ have i.i.d.\ symmetric coefficients from
+distributions $A$ and $B$. The pair $\bigl((ab)_0,(ab)_{n/2}\bigr)$ is
+distributed as the sum of $n/2$ independent copies of
+$(xy+x'y',\;xy'-x'y)$ with $x,x'\sim A$ and $y,y'\sim B$ independent.
+\end{lemma}
+
+\begin{proof}
+Coefficient $0$ of $ab$ uses the products $a_ib_{-i}$ and coefficient $n/2$
+the products $a_ib_{n/2-i}$ (indices modulo $n$, with the sign of the
+wrap-around). For $i\in\{0,\dots,n/2-1\}$ the four variables
+$a_i,a_{i+n/2},b_{-i},b_{n/2-i}$ appear only in the two products of index
+$i$ and the two of index $i+n/2$, and the index sets are disjoint across
+$i$. Collecting signs, the contribution of this quadruple is
+$(\pm a_ib_{-i}\pm a_{i+n/2}b_{n/2-i},\ \pm a_ib_{n/2-i}\pm a_{i+n/2}b_{-i})$
+with sign product $-1$; flipping the signs of the symmetric variables
+$a_{i+n/2}$ and $b_{-i}$ brings it to the stated form.
+\end{proof}
+
+The atom has uncorrelated coordinates of equal variance
+$\E[x^2]\E[y^2]\cdot 2$, but it is not Gaussian and not isotropic in its
+higher cumulants. For Rudraksh2 the pair $(\Dm_0,\Dm_{n/2})$ is the sum of
+$\ell n/2$ atoms with $A=\CBD_\eta$, $B=\CBD_\eta$ (from $\langle e,s'\rangle$),
+$\ell n/2$ atoms with $A=\CBD_\eta$, $B=\CBD_\eta*\Delta u$, and the known
+shift $d=(e''+\Delta v)_{0,n/2}$. For Scabbard it is the sum of $\ell n/2$
+atoms with $A$ the rounding error and $B=\CBD_\eta$, twice, plus the shift
+$\rho$. All atom pmfs are enumerated exactly ($5^4=625$ terms for two
+$\CBD_2$ factors, $16^2\cdot 5^2$ for Scabbard).
+
+\paragraph{Computation.}
+The B2-Minal cell is star-shaped. For each of the 16 messages and each of
+$32$ directions $\phi$ we take the first-fail radius $r(\phi)$ of the
+vectorised decoder. The atoms of Lemma~\ref{lem:atom} project onto that
+direction as one-dimensional laws; their sum is evaluated by the same
+tilted FFT as in Section~\ref{sec:tilt}, and a Mills/Rayleigh factor
+$z\sqrt{2\pi}$ with $z=r/\sigma_{\mathrm{proj}}$ converts the half-space
+tail into a radial tail. Averaging over messages and angles gives the pair
+failure probability; then $\dfr=1-(1-\dfr_{\mathrm{pair}})^{n/2}$. A
+squared-norm tilt of the ciphertext secrets rebuilds the atoms so that
+their coefficient squares have mean $S$ times the honest value.
+
+\paragraph{Validation.}
+On scaled-down instances of both schemes we ran the real algorithms
+(matrix sampling, CBD, Kyber-style or power-of-two rounding, Minal
+encoding and decoding) and compared the ciphertext failure rate with the
+exact pair computation. For Rudraksh2 at
+$\ell=2,n=16,q=97,p=32,t=16,\eta=1,\beta=8$ we observed $699$ failures in
+$2000$ encryptions ($2^{-1.52}$) against the exact $2^{-1.68}$; the
+predicate $|(\Dm_0,\Dm_{n/2})|\in F_m$ agreed with the decoder on every
+ciphertext, and the empirical coefficient variance is $0.972$ of the
+model. For Scabbard at
+$\ell=2,n=16,\epsilon_q=8,\epsilon_p=5,\epsilon_t=3,\eta=2,\beta=12$ the
+toy is past the high-noise regime: $1467$ of $2000$ encryptions failed
+and the exact computation saturates at $1$, with second-moment ratio
+$1.031$. These toys check the decoder and the second moment; the
+operating-point tails of Section~\ref{sec:minalresults} use the same
+atoms and radii at the real $(q,\beta)$.
+
+\section{Results for Rudraksh2-128-I and Scabbard-128}
+\label{sec:minalresults}
+
+\paragraph{Rudraksh2-128-I} ($\ell=9$, $n=64$, $q=3329$, $p=2^{12}$,
+$t=2^{6}$, $\eta=2$, $\beta=220$). The exact DFR is $2^{-103.9}$, three
+to four bits below the claimed $2^{-100}$. Under a $2^{80}$ query cap a
+squared-norm tilt of the ciphertext secrets to $S=1.34$ makes
+$\dfr(S)\approx2^{-80}$ at an offline cost of $2^{32}$ encapsulations,
+for a classical total of $2^{112}$ and a quantum total of $2^{96}$
+(Table~\ref{tab:minalres}). The classical total sits $16$ bits below the
+nominal 128; the quantum total exceeds the 80-bit quantum target of the
+submission. Under a $2^{64}$ cap the tilt must reach $S=1.67$, the
+offline cost is $2^{104}$ and the classical total $2^{168}$ (quantum
+$2^{116}$). Without a cap a failure costs $2^{104}$: below the nominal
+128, below the designers' Core-SVP 129 and below the estimator's $197.7$.
+
+\paragraph{Scabbard-128} ($\ell=9$, $n=64$, $\epsilon_q=14$,
+$\epsilon_p=10$, $\epsilon_t=3$, $\eta=2$, $\beta=1030$). The exact DFR
+is $2^{-102.1}$, against the claimed $2^{-99}$. The gap to an isotropic
+Gaussian of the same variance (about $2^{-67}$ in a second-moment
+screen) is the bounded support of the two rounding errors and of
+$\rho$. Without a query cap a failure costs $2^{102}$, below the level
+128 and below the Core-SVP value $127.6$; this is the comparison the
+specification itself makes when it writes that $2^{64}\times 2^{-99}$ is
+negligible. Under a $2^{80}$ cap a tilt of $s'$ to $S=1.68$ costs
+$2^{108}$ offline and a classical total of $2^{188}$ (quantum $2^{134}$);
+under a $2^{64}$ cap $S=2.36$ costs $2^{368}$ offline. The encapsulation
+secret controls only about half of the noise variance, so the tilt is
+expensive.
+
+The remaining Rudraksh2 sets claim DFRs $2^{-100}$, $2^{-161}$,
+$2^{-167}$, $2^{-160}$, $2^{-160}$ and the remaining Scabbard sets claim
+$2^{-125}$; none of them meets a $2^{80}$ conditional failure rate on a
+legal ciphertext at a cost below the level, and they are outside this
+paper.
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+& & & & \multicolumn{2}{c}{$2^{80}$ queries} & \multicolumn{2}{c}{$2^{64}$ queries}\\
+\cmidrule(lr){5-6}\cmidrule(lr){7-8}
+Set & level & claimed & exact $\log_2\dfr$ & $S$, precomp & classical / quantum & $S$, precomp & classical / quantum\\
+\midrule
+Rudraksh2-128-I & 128 / 80q & $-100$ & $\mathbf{-103.9}$ & 1.34, 32.2 & $\mathbf{112.2}$ / 96.1 & 1.67, 103.8 & 167.8 / 115.9\\
+Scabbard-128 & 128 & $-99$ & $\mathbf{-102.1}$ & 1.68, 107.7 & 187.7 / 133.9 & 2.36, 368.4 & 432.4 / 248.2\\
+\bottomrule
+\end{tabular}}
+\caption{Minal-coded sets: exact DFR and the cheapest first failure under
+a query cap. $S$ is the squared-norm tilt of the ciphertext secrets
+($s',e'$ for Rudraksh2; $s'$ for Scabbard) and ``precomp'' its $\log_2$
+cost.}
+\label{tab:minalres}
+\end{table}
+
+\clearpage
+\part{Summary and discussion}
+
+\section{All affected parameter sets}
+\label{sec:summary}
+
+\begin{table}[t]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrrl}
+\toprule
+Set & mechanism & level & claimed & ours & no cap & $2^{80}$ cap & $2^{64}$ cap & Core-SVP\\
+\midrule
+DTRU-648 & correlated blocks & 128 & $-146.8$ & $-85.4$ & 85 & 84 & 86 & 164.7\\
+DTRU-768 & correlated blocks & 192 & $-185.6$ & $-97.9$ & 98 & 86 & 87 & 199.4\\
+DTRU-1024 & correlated blocks & 256 & $-190.5$ & $-104.6$ & 105 & 99 & 103 & 277.7\\
+DTRU-Prime & correlated blocks & 256 & $-180.7$ & $-96.3$ & 96 & 80 & 80 & 292.6\\
+DTRU-1536 & correlated blocks & 384 & $-195.5$ & $-100.7$ & 101 & 95 & 99 & 416.7\\
+DTRU-2048 & correlated blocks & 512 & $-204.1$ & $-110.8$ & 111 & 116 & 130 & 512.5\\
+Cheetah256 & omitted compression & 256 & $-176$ & $-51.8$ & 52 & 52 & 52 & 325.9\\
+Cheetah128 & omitted compression & 128 & $-129$ & $-79.1$ & 79 & 79 & 113 & 148.3\\
+\midrule
+DTRU-Light & (none) & 128 & $-143.9$ & $-137.4$ / $-121.7$ & 122--137 & 125 & 130 & 132.3\\
+Rudraksh2-128-I & bounded noise, exact & 128 & $-100$ & $-103.9$ & 104 & 112 & 168 & 197.7\\
+Scabbard-128 & bounded noise, exact & 128 & $-99$ & $-102.1$ & 102 & 188 & 432 & 127.6\\
+\bottomrule
+\end{tabular}}
+\caption{$\log_2$ of the classical work for a first decryption failure.
+``ours'' is the recomputed $\log_2\dfr$ (DTRU: sample mean; Light: sample
+mean / normal tail). The cap columns include the offline search. Core-SVP
+is the classical estimator value for key recovery. The first block is
+Class~I (first-failure cost below the nominal level); the second block
+is Class~II (on the line, or below the level only without a query cap).}
+\label{tab:summary}
+\end{table}
+
+Table~\ref{tab:summary} collects the first-failure costs. Eight parameter
+sets have a first-failure cost below their nominal level under a $2^{80}$
+query cap, by two mechanisms; three more sit at the line.
+
 \section{Discussion}
 \label{sec:discussion}
 
-\paragraph{What is wrong and how to fix it.}
-The specification computes the per-coefficient variance correctly (we
-reproduce its numbers) but then treats the 16 coefficients of a decoding
-block as independent. In $x^n-x^{n/2}+1$ this is false in a structured way:
-the block is made of ring-paired coefficients, and the repetition code
-places the same message bit on both members of each pair. The correct
-computation is cheap: form the $16\times16$ conditional covariance
-$\Sigma_I$ per block and evaluate the half-space union of
-Lemma~\ref{lem:region} (or, conservatively, the generalised $\chi^2$ tail of
-the ball on the eigenvalues of $\Sigma_I$). At the design stage one can also
-remove the coincidence: if the two octets of a decoding block are not
-ring-paired (for instance by using a repetition offset different from
-$n/2$, or by interleaving block positions so that no block contains both
-$j$ and $j+n/2$), the pairing correlation moves to different blocks where
-it does not affect the per-block tail. We have not evaluated the
-correctness or cost impact of such a change.
+\paragraph{Three ways a DFR computation goes wrong.}
+DTRU computes the per-coefficient variance correctly but treats the 16
+coefficients of a decoding block as independent; in $x^n-x^{n/2}+1$ the
+block is made of ring-paired coefficients and the repetition code places
+the same bit on both members of each pair. Cheetah models the right kind of
+tail but on the wrong noise: the decompressed public key carries a rounding
+error that multiplies $r$, and the $v$-compression error is a known shift,
+not a worst case. Rudraksh2 and Scabbard evaluate a two-dimensional FFT of
+the pair; we recover values a few bits below their claims. The remaining
+finding for those two sets is the query-cap arithmetic: a $2^{80}$ budget
+plus a modest offline tilt puts Rudraksh2-128-I below the classical 128-bit
+line, and Scabbard-128 without a cap is already below 128 by the
+specification's own $1/\dfr$ comparison.
+
+\paragraph{Fixes.}
+For DTRU the correct computation is cheap: form the $16\times16$
+conditional covariance $\Sigma_I$ per block and evaluate the half-space
+union of Lemma~\ref{lem:region}; at the design stage the coincidence can be
+removed by decoupling the repetition offset from the ring pairing. For
+Cheetah, $d_v=4$ and $d_b=10$ are the two parameters to revisit; the exact
+tail of Section~\ref{sec:cheetahexact} can replace the Gaussian, and
+$\langle e_b,r\rangle$ belongs in the noise. For the Minal schemes the
+exact pair tail is already close to the claim; what changes the level is
+whether $1/\dfr$ or a $2^{80}$ total is the figure of merit.
 
 \paragraph{Security levels.}
 In the DFR metric, six of seven DTRU sets miss their nominal level by
-$43$--$400$ bits, and DTRU-648 does so with a first-failure cost of about
-$2^{85}$ that fits into a $2^{64}$-query budget after $2^{24}$ offline
-encapsulations. The FO advantage term $(q_H+q_D)\dfr$ of the
-specification's Theorem~3 becomes constant at $q_D\approx2^{85}$--$2^{111}$
-with the corrected $\dfr$. None of this yields a practical attack, and
-DTRU-Light is unaffected in structure.
+$43$--$400$ bits, Cheetah256 by about $200$ bits and Cheetah128 by $50$
+bits. Rudraksh2-128-I under a $2^{80}$ cap sits $16$ bits below 128
+classically and $16$ bits above the 80-bit quantum target. Scabbard-128
+without a cap is $26$ bits below 128. The FO advantage term
+$(q_H+q_D)\dfr$ becomes constant at $q_D\approx2^{52}$--$2^{111}$ for the
+Class~I sets. None of this yields a practical attack.
 
 \paragraph{Limitations.}
-Our estimate of $\E[p]$ is a tail quantity: the sample mean of 200
+Our DTRU estimate of $\E[p]$ is a tail quantity: the sample mean of 200
 ciphertexts and the normal-tail extrapolation differ by $1$--$2$ bits for
-DTRU-648 and -2048 and by $12$--$16$ bits for DTRU-768, -Prime and -Light.
-Narrowing this requires importance sampling of ciphertexts tilted towards
-large top eigenvalues, which we leave open. Failure probabilities are
-averaged over keys; weak keys were not studied. The layout of DoubleE$_8$
-for DTRU-Prime is our assumption, and the specification's $20\%$ larger
-variance for that set is unexplained. The directional-boosting figures are
+DTRU-648 and -2048 and by $12$--$16$ bits for DTRU-768, -Prime and -Light;
+narrowing this requires importance sampling of ciphertexts tilted towards
+large top eigenvalues. Failure probabilities are averaged over keys; weak
+keys were not studied. The layout of DoubleE$_8$ for DTRU-Prime is our
+assumption. For Cheetah the value at $q/4$ is an exact computation under
+the independence of coefficients that the designers also assume; the
+full-size check reaches $|E|\ge800$ ($2^{-11}$ to $2^{-14}$) and the
+scaled-down check reaches the decoder. For the Minal schemes the pair tail
+is a radial approximation of a polygonal cell, checked on toys whose
+failure rates are $2^{0}$ to $2^{-2}$, so a few bits of geometric residual
+remain at the operating point; the squared-norm tilt is evaluated on a
+refined $S$ search, and the reported costs are upper bounds within a few
+bits. The directional-boosting figures for DTRU are
 single-hyperplane conditional estimates, not a re-implementation
 of~\cite{DRV20}, and no lattice reduction on a failure-augmented instance
-was run.
+was run for any scheme.
 
 \section{Conclusion}
 For lattice KEMs that decode blocks of coefficients with an error-correcting
-code, the DFR analysis must account for correlations inside a block. DTRU's
-tricyclotomic and LPPNF instantiations pair the coefficients of every
-decoding block through the ring itself, and its repetition encoding
-reinforces the pairing. Correcting the model raises the failure rate of six
-parameter sets by $50$--$110$ bits and places the cost of a first decryption
-failure between $2^{85}$ and $2^{111}$ decapsulations, below every nominal
-level from $128$ to $512$. The computation that exposes this uses only
-$16\times16$ covariance matrices and can be added to any DFR script.
+code, or that compress keys and ciphertexts, the DFR analysis must use the
+real decoder, the real noise and the exact tail. Correlations inside a
+decoding block raise the failure rate of six DTRU parameter sets by
+$50$--$110$ bits; an omitted public-key compression term and a
+worst-case treatment of the ciphertext compression hide failure rates of
+$2^{-52}$ and $2^{-79}$ in Cheetah256 and Cheetah128; the exact pair
+tails of Rudraksh2-128-I and Scabbard-128 sit a few bits below the claims,
+and a $2^{80}$ query budget puts the former below the classical 128-bit
+line. The computations that expose this use $16\times16$ covariance
+matrices, tilted one-dimensional FFTs, the Voronoi radii of the schemes'
+own decoders, and can be added to any DFR script.
 
 \paragraph{Reproducibility.}
 All scripts (\texttt{dfr\_all\_sets.py}, \texttt{ml\_decoder\_check.py},
-\texttt{exact\_cgf\_check.py}, \texttt{recover.py})
-and their JSON outputs are provided with this paper. They depend only on
-NumPy, SciPy and mpmath.
+\texttt{exact\_cgf\_check.py}, \texttt{recover.py} for DTRU;
+\texttt{exact\_tails.py}, \texttt{cheetah\_toy.py}, \texttt{boost\_screen.py}
+for Cheetah, Rudraksh2 and Scabbard) and their JSON outputs are provided with
+this paper. They depend only on NumPy and SciPy.
 
 \begin{thebibliography}{9}
 \bibitem{DTRU}
@@ -663,6 +1160,29 @@ DTRU team.
 \newblock DTRU: Algorithm specifications and supporting documentation,
 version 1.0.
 \newblock NGCC submission, June 2026.
+
+\bibitem{Cheetah}
+CheetahKEM team.
+\newblock Cheetah key encapsulation mechanism: Algorithm specifications and
+supporting documentation.
+\newblock NGCC submission, 2026.
+
+\bibitem{Rudraksh2}
+Rudraksh2 team.
+\newblock Rudraksh2: Algorithm specifications and supporting documentation.
+\newblock NGCC submission, 2026.
+
+\bibitem{Scabbard}
+MORNING-Scabbard team.
+\newblock Scabbard: Algorithm specifications and supporting documentation.
+\newblock NGCC submission, 2026.
+
+\bibitem{Minal}
+T.\ Paiva, M.\ Simplicio, S.\ Hafiz, B.\ Yildiz, E.\ Cominetti, and
+H.\ Ogawa.
+\newblock Tailorable codes for lattice-based KEMs with applications to
+compact ML-KEM instantiations.
+\newblock \emph{IACR Trans.\ CHES} 2025(3), 139--163.
 
 \bibitem{DVV19}
 J.-P.\ D'Anvers, F.\ Vercauteren, and I.\ Verbauwhede.

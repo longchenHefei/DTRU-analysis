@@ -1,19 +1,25 @@
-# Correlated Decryption Errors in DTRU
+# Decryption Failures in NGCC Lattice KEMs
 
 Reproduction package for the paper
 
-> *Correlated Decryption Errors in DTRU: Revisiting Failure Rates and Failure Boosting for Lattice KEMs with Repetition-Coded Blocks*
+> *Decryption Failures in NGCC Lattice KEMs: Correlated Blocks, Omitted Compression Noise, and Failure Boosting under a Query Cap*
 
-We recompute the decryption failure rates of all seven DTRU parameter sets with the real Algorithm-2 failure event and the correct block covariance, then evaluate classical/quantum failure-boosting costs under the model of D'Anvers et al. (ePrint 2018/1089, 2019/1399, 2021/193).
+We recompute decryption failure rates and failure-boosting costs for Class I / Class II first-round NGCC lattice KEMs:
+
+- **Part I — DTRU.** Real Algorithm-2 failure region and block covariance for all seven sets.
+- **Part II — Cheetah.** Exact one-dimensional tilted-FFT tails including public-key compression noise.
+- **Part III — Rudraksh2 / Scabbard.** Exact pair tails for B2-Minal decoding under a \(2^{64}\) / \(2^{80}\) query cap.
+
+No end-to-end key recovery is claimed.
 
 ## Contents
 
 | Path | Description |
 |------|-------------|
 | `paper/main.tex`, `paper/main.pdf` | Draft paper (LaTeX + PDF) |
-| `scripts/` | Python reproduction scripts |
-| `results/` | JSON outputs from the scripts |
-| `reports/` | Chinese technical reports (full analysis + DTRU-2048 note) |
+| `scripts/` | Python reproduction scripts (DTRU + Cheetah + Minal) |
+| `results/` | JSON outputs cited in the paper |
+| `reports/` | Chinese technical reports |
 
 ## Requirements
 
@@ -26,37 +32,39 @@ pip install numpy scipy mpmath
 
 ## Reproduce
 
-From `scripts/` (paths in the scripts assume they live next to each other):
+From `scripts/`:
 
 ```bash
 cd scripts
 
-# Three-ring toy validation (real Enc/Dec vs models)
+# --- DTRU (Part I) ---
 python3 dfr_all_sets.py toy
-
-# All 7 parameter sets (40 samples by default; set DTRU_SAMPLES=200 for the paper numbers)
 DTRU_SAMPLES=200 python3 dfr_all_sets.py full
 python3 dfr_all_sets.py merge
-
-# Half-space predicate vs Algorithm 2; toy spectral recovery; n=2048 directions
 python3 recover.py check
 python3 recover.py toy
 python3 recover.py full
 
-# Optional: ball-spectrum / CGF checks
-python3 failure_boost.py
-python3 failure_boost.py tail
-python3 ml_decoder_check.py toy
-python3 ml_decoder_check.py full
-python3 exact_cgf_check.py full
+# --- Cheetah + Minal (Parts II–III) ---
+# Writes exact_tails.json next to the script; paper numbers live in ../results/
+python3 exact_tails.py
+python3 cheetah_toy.py
+
+# Optional screens (Gaussian / Chernoff, not the paper's exact figures)
+python3 boost_screen.py
+python3 query80_cost.py
 ```
 
-Headline numbers for DTRU-2048 (200 ciphertexts) match those in `results/dfr_all_sets.json` and Section 6 of the paper: median failure rate about \(2^{-123}\), sample mean about \(2^{-111}\).
+Headline numbers:
+
+- DTRU-2048 (200 ciphertexts): sample mean about \(2^{-111}\) — `results/dfr_all_sets.json`
+- Cheetah128 / 256 exact DFR \(2^{-79.1}\) / \(2^{-51.8}\) — `results/exact_tails.json`, `results/cheetah_toy.json`
+- Rudraksh2-128-I / Scabbard-128 exact DFR \(2^{-103.9}\) / \(2^{-102.1}\) — `results/exact_tails.json`
 
 ## License
 
-Code and data: MIT. The DTRU specification itself is not redistributed here; cite the NGCC submission.
+Code and data: MIT. The NGCC specifications themselves are not redistributed here; cite the submissions (DTRU, Cheetah, Rudraksh2, MORNING-Scabbard).
 
 ## Disclaimer
 
-This is cryptanalysis of a submitted KEM. No end-to-end key recovery on the full parameters is claimed. Numbers are for academic evaluation.
+This is cryptanalysis of submitted KEMs. No end-to-end key recovery on the full parameters is claimed. Numbers are for academic evaluation.

@@ -1,0 +1,277 @@
+{
+  "cheetah": [
+    {
+      "name": "Cheetah128",
+      "level": 128,
+      "claimed_log2": -129,
+      "spec_formula_log2": -162.75,
+      "exact_log2": -79.09,
+      "budgets": {
+        "64": {
+          "reachable": true,
+          "log2_delta": -79.09,
+          "precomp": 49.4,
+          "oracle": 64,
+          "classical": 113.4,
+          "quantum": 88.7,
+          "S_r": 1.47,
+          "S_e1": 1.0,
+          "log2_at_S": -64.10
+        },
+        "80": {
+          "reachable": true,
+          "log2_delta": -79.09,
+          "precomp": 0.0,
+          "oracle": 79.09,
+          "classical": 79.09,
+          "quantum": 79.09,
+          "S_r": 1.0,
+          "S_e1": 1.0
+        }
+      },
+      "claimed_C": 159,
+      "claimed_Q": 139,
+      "core_svp_C": 148.3,
+      "core_svp_Q": 134.6
+    },
+    {
+      "name": "Cheetah256",
+      "level": 256,
+      "claimed_log2": -176,
+      "spec_formula_log2": -125.53,
+      "exact_log2": -51.84,
+      "budgets": {
+        "64": {
+          "reachable": true,
+          "log2_delta": -51.839,
+          "precomp": 0.0,
+          "oracle": 51.839,
+          "classical": 51.839,
+          "quantum": 51.839,
+          "S_r": 1.0,
+          "S_e1": 1.0
+        },
+        "80": {
+          "reachable": true,
+          "log2_delta": -51.839,
+          "precomp": 0.0,
+          "oracle": 51.839,
+          "classical": 51.839,
+          "quantum": 51.839,
+          "S_r": 1.0,
+          "S_e1": 1.0
+        }
+      },
+      "claimed_C": 307,
+      "claimed_Q": 276,
+      "core_svp_C": 325.9,
+      "core_svp_Q": 295.7
+    },
+    {
+      "name": "Cheetah384",
+      "level": 384,
+      "claimed_log2": -189,
+      "spec_formula_log2": -149.22,
+      "exact_log2": -116.13,
+      "budgets": {
+        "64": {
+          "reachable": true,
+          "log2_delta": -116.134,
+          "precomp": 1386.428,
+          "oracle": 64,
+          "classical": 1450.428,
+          "quantum": 757.214,
+          "S_r": 2.667,
+          "S_e1": 1.0,
+          "log2_at_S": -62.794
+        },
+        "80": {
+          "reachable": true,
+          "log2_delta": -116.134,
+          "precomp": 549.266,
+          "oracle": 80,
+          "classical": 629.266,
+          "quantum": 354.633,
+          "S_r": 1.833,
+          "S_e1": 1.417,
+          "log2_at_S": -76.044
+        }
+      },
+      "claimed_C": 426,
+      "claimed_Q": 382,
+      "core_svp_C": 499.0,
+      "core_svp_Q": 452.9
+    },
+    {
+      "name": "Cheetah512",
+      "level": 512,
+      "claimed_log2": -243,
+      "spec_formula_log2": -335.64,
+      "exact_log2": -201.04,
+      "budgets": {
+        "64": {
+          "reachable": true,
+          "log2_delta": -201.044,
+          "precomp": 15360.0,
+          "oracle": 64,
+          "classical": 15424.0,
+          "quantum": 7744.0,
+          "S_r": 4.0,
+          "S_e1": 4.0,
+          "log2_at_S": -61.595
+        },
+        "80": {
+          "reachable": true,
+          "log2_delta": -201.044,
+          "precomp": 6422.159,
+          "oracle": 80,
+          "classical": 6502.159,
+          "quantum": 3291.079,
+          "S_r": 3.5,
+          "S_e1": 2.25,
+          "log2_at_S": -77.765
+        }
+      },
+      "claimed_C": 541,
+      "claimed_Q": 497,
+      "core_svp_C": 511.9,
+      "core_svp_Q": 464.6
+    }
+  ],
+  "minal": [
+    {
+      "name": "Rudraksh2-128-I",
+      "level": 128,
+      "claimed_log2": -100,
+      "exact_log2": -103.92,
+      "budgets": {
+        "64": {
+          "reachable": true,
+          "log2_delta": -103.918,
+          "precomp": 103.8,
+          "oracle": 64,
+          "classical": 167.8,
+          "quantum": 115.9,
+          "S": 1.666,
+          "log2_at_S": -64.25
+        },
+        "80": {
+          "reachable": true,
+          "log2_delta": -103.918,
+          "precomp": 32.2,
+          "oracle": 80,
+          "classical": 112.2,
+          "quantum": 96.1,
+          "S": 1.340,
+          "log2_at_S": -79.54
+        }
+      },
+      "claimed_C": 129,
+      "claimed_Q": 117,
+      "core_svp_C": 197.7,
+      "core_svp_Q": 179.4
+    },
+    {
+      "name": "Scabbard-128",
+      "level": 128,
+      "claimed_log2": -99,
+      "exact_log2": -102.07,
+      "budgets": {
+        "64": {
+          "reachable": true,
+          "log2_delta": -102.073,
+          "precomp": 368.4,
+          "oracle": 64,
+          "classical": 432.4,
+          "quantum": 248.2,
+          "S": 2.359,
+          "log2_at_S": -64.08
+        },
+        "80": {
+          "reachable": true,
+          "log2_delta": -102.073,
+          "precomp": 107.7,
+          "oracle": 80,
+          "classical": 187.7,
+          "quantum": 133.9,
+          "S": 1.680,
+          "log2_at_S": -80.22
+        }
+      },
+      "claimed_C": 128,
+      "claimed_Q": 116,
+      "core_svp_C": 127.6,
+      "core_svp_Q": 115.8
+    }
+  ],
+  "minal_toys": {
+    "rudraksh_toy_observed": {
+      "scheme": "Rudraksh2-toy",
+      "params": {
+        "ell": 2,
+        "n": 16,
+        "q": 97,
+        "p": 32,
+        "t": 16,
+        "eta": 1,
+        "beta": 8
+      },
+      "trials": 2000,
+      "decrypt_failures": 699,
+      "predicate_failures": 699,
+      "predicate_disagreements": 0,
+      "empirical_coeff_var": 30.90934375,
+      "model_coeff_var": 31.814127604166668,
+      "second_moment_ratio": 0.9715603122793735,
+      "controlled_fraction": 0.5029212241515149
+    },
+    "scabbard_toy_observed": {
+      "scheme": "Scabbard-toy",
+      "params": {
+        "ell": 2,
+        "n": 16,
+        "q": 256,
+        "p": 32,
+        "t": 8,
+        "eta": 2,
+        "beta": 12
+      },
+      "trials": 2000,
+      "decrypt_failures": 1467,
+      "predicate_failures": 1467,
+      "predicate_disagreements": 0,
+      "empirical_coeff_var": 351.9415,
+      "model_coeff_var": 341.25,
+      "second_moment_ratio": 1.031330402930403,
+      "controlled_fraction": 0.49230769230769234
+    },
+    "rudraksh_toy": {
+      "params": {
+        "ell": 2,
+        "n": 16,
+        "q": 97,
+        "p": 32,
+        "t": 16,
+        "eta": 1,
+        "beta": 8
+      },
+      "n_pairs": 8,
+      "exact_log2_ciphertext": -1.675,
+      "exact_p": 0.313065120970677
+    },
+    "scabbard_toy": {
+      "params": {
+        "ell": 2,
+        "n": 16,
+        "q": 256,
+        "p": 32,
+        "t": 8,
+        "eta": 2,
+        "beta": 12
+      },
+      "n_pairs": 8,
+      "exact_log2_ciphertext": 0.0,
+      "exact_p": 1.0
+    }
+  }
+}
